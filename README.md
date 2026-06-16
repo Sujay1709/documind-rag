@@ -14,8 +14,11 @@ See [What's new](#whats-new) for the differences.
 
 ## Features
 
-- **Chat interface** with persistent conversation history and follow-up questions.
-- **Multiple PDFs** indexed at once, with per-document tracking and a "clear index" control.
+- **Polished landing page** with a hero, feature cards, and live stat chips.
+- **Chat interface** with conversation history and follow-up questions.
+- **Persistent history store** — every question, answer, and its sources are saved
+  to disk and browsable from the sidebar, surviving app restarts.
+- **Multiple PDFs** indexed at once, with per-document tracking and a "clear" control.
 - **Cross-encoder re-ranking** so the most relevant chunks (not just the most
   similar embeddings) are sent to the model.
 - **Source citations** — every answer shows the chunks, source file, page, and
@@ -86,6 +89,8 @@ Copy `.env.example` to `.env` and override any of the settings (all optional):
 | `DOCUMIND_N_RESULTS` | `10` | Candidates retrieved before re-ranking |
 | `DOCUMIND_TOP_K_RERANK` | `3` | Chunks kept after re-ranking |
 | `DOCUMIND_PERSIST_DIR` | `./.documind/chroma` | Vector store location |
+| `DOCUMIND_HISTORY_FILE` | `./.documind/history.json` | Persistent Q&A history file |
+| `DOCUMIND_MAX_HISTORY` | `200` | Max history entries retained |
 
 ## Run with Docker
 

@@ -1,0 +1,14 @@
+# Streamlit theme & server configuration for DocuMind.
+
+[theme]
+primaryColor = "#6C5CE7"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#161B27"
+textColor = "#E6E8EF"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true

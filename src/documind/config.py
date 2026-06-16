@@ -63,6 +63,15 @@ class Settings(BaseSettings):
     )
     collection_name: str = Field(default="documind")
 
+    # --- History ---------------------------------------------------------
+    history_file: Path = Field(
+        default=Path("./.documind/history.json"),
+        description="JSON file storing past questions, answers, and sources.",
+    )
+    max_history: int = Field(
+        default=200, ge=1, le=10000, description="Maximum history entries to retain."
+    )
+
     @property
     def ollama_embeddings_url(self) -> str:
         return f"{self.ollama_base_url.rstrip('/')}/api/embeddings"

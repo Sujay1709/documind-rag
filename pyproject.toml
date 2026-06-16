@@ -49,8 +49,9 @@ target-version = "py310"
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
-# app.py adjusts sys.path before importing the package, so imports follow code.
-"src/documind/app.py" = ["E402"]
+# app.py adjusts sys.path before importing the package (E402) and embeds HTML/CSS
+# blocks that are clearer left on single lines (E501).
+"src/documind/app.py" = ["E402", "E501"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
