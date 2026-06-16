@@ -59,7 +59,7 @@ question ───────────────────────�
 ## Quick start
 
 ```bash
-git clone https://github.com/USERNAME/documind-rag.git
+git clone https://github.com/Sujay1709/documind-rag.git
 cd documind-rag
 
 python -m venv .venv && source .venv/bin/activate

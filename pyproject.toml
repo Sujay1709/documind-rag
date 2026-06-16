@@ -35,8 +35,8 @@ dev = [
 documind = "documind.app:main"
 
 [project.urls]
-Homepage = "https://github.com/USERNAME/documind-rag"
-Repository = "https://github.com/USERNAME/documind-rag"
+Homepage = "https://github.com/Sujay1709/documind-rag"
+Repository = "https://github.com/Sujay1709/documind-rag"
 
 [tool.setuptools.packages.find]
 where = ["src"]
