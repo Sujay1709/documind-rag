@@ -1,0 +1,25 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    # Pull models once the container is up, e.g.:
+    #   docker compose exec ollama ollama pull llama3.2:3b
+    #   docker compose exec ollama ollama pull nomic-embed-text
+
+  documind:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      DOCUMIND_OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - documind-data:/app/.documind
+    depends_on:
+      - ollama
+
+volumes:
+  ollama:
+  documind-data:

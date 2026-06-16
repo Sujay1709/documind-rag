@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "documind"
+version = "0.1.0"
+description = "Local, privacy-first RAG assistant that lets you chat with your PDFs using Ollama + ChromaDB."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Sujay" }]
+keywords = ["rag", "llm", "ollama", "chromadb", "pdf", "retrieval-augmented-generation"]
+
+dependencies = [
+    "streamlit>=1.36",
+    "langchain-community>=0.3",
+    "langchain-core>=0.3",
+    "langchain-text-splitters>=0.3",
+    "pymupdf>=1.24",
+    "chromadb>=0.5",
+    "sentence-transformers>=3.0",
+    "ollama>=0.3",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+documind = "documind.app:main"
+
+[project.urls]
+Homepage = "https://github.com/USERNAME/documind-rag"
+Repository = "https://github.com/USERNAME/documind-rag"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

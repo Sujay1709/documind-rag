@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+
+# Vector store & app data
+.documind/
+demo-rag-chroma/
+*.sqlite3
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Model caches (sentence-transformers / HF)
+.cache/
