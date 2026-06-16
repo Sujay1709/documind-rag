@@ -5,6 +5,15 @@ Run with:  streamlit run src/documind/app.py
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# Allow `streamlit run src/documind/app.py` to work without `pip install -e .`
+# by ensuring the project's `src` directory is importable.
+_SRC = Path(__file__).resolve().parent.parent
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
 import streamlit as st
 
 from documind import vectorstore
