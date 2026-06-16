@@ -13,6 +13,18 @@ def test_retrieve_handles_empty_store(monkeypatch):
     assert result.context == ""
 
 
+def test_retrieve_forwards_source_filter(monkeypatch):
+    captured = {}
+
+    def fake_query(prompt, n_results=None, source=None, settings=None):
+        captured["source"] = source
+        return {"documents": [[]], "metadatas": [[]]}
+
+    monkeypatch.setattr(vectorstore, "query", fake_query)
+    pipeline.retrieve("q", source="report_pdf")
+    assert captured["source"] == "report_pdf"
+
+
 def test_retrieve_reranks_and_builds_context(monkeypatch):
     fake = {
         "documents": [["alpha chunk", "beta chunk", "gamma chunk"]],

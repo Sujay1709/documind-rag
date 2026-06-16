@@ -21,6 +21,7 @@ from documind import history, vectorstore
 from documind.config import get_settings
 from documind.ingestion import process_uploaded_file
 from documind.pipeline import answer
+from documind.reranker import RankedChunk
 
 st.set_page_config(
     page_title="DocuMind",
@@ -110,6 +111,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []  # list[{"role","content", "sources"?}]
 if "selected_history_id" not in st.session_state:
     st.session_state.selected_history_id = None
+if "active_doc" not in st.session_state:
+    st.session_state.active_doc = None  # currently scoped document (or None = all)
 
 
 # --------------------------------------------------------------------------- #
@@ -141,6 +144,42 @@ def _fmt_ts(iso: str) -> str:
         return datetime.fromisoformat(iso).strftime("%b %d, %Y · %H:%M")
     except ValueError:
         return iso
+
+
+def _chunks_from_sources(sources: list[dict]) -> list[RankedChunk]:
+    """Rebuild RankedChunk objects from stored history sources for uniform rendering."""
+    return [
+        RankedChunk(
+            text=s.get("snippet", ""),
+            metadata={"source": s.get("source", "unknown"), "page": s.get("page")},
+            score=float(s.get("score", 0.0)),
+        )
+        for s in sources
+    ]
+
+
+def _messages_from_history(entries) -> list[dict]:
+    """Turn saved history entries (oldest→newest) into chat messages."""
+    messages: list[dict] = []
+    for e in sorted(entries, key=lambda x: x.timestamp):
+        messages.append({"role": "user", "content": e.question})
+        messages.append(
+            {
+                "role": "assistant",
+                "content": e.answer,
+                "sources": _chunks_from_sources(e.sources),
+            }
+        )
+    return messages
+
+
+def _open_document(doc: str, hist) -> None:
+    """Scope the session to ``doc`` and restore its related chat history."""
+    st.session_state.active_doc = doc
+    st.session_state.selected_history_id = None
+    related = [e for e in hist if doc in e.documents]
+    st.session_state.messages = _messages_from_history(related)
+    st.rerun()
 
 
 def _hero() -> None:
@@ -232,9 +271,17 @@ def _sidebar(sources, hist):
 
         st.divider()
         st.subheader("📚 Indexed documents")
+        st.caption("Click a document to revisit it with its chat history.")
         if sources:
             for s in sources:
-                st.markdown(f"- {s}")
+                active = st.session_state.active_doc == s
+                if st.button(
+                    f"{'📂' if active else '📄'} {s}",
+                    key=f"doc_{s}",
+                    use_container_width=True,
+                    type="primary" if active else "secondary",
+                ):
+                    _open_document(s, hist)
         else:
             st.caption("Nothing indexed yet.")
 
@@ -255,6 +302,7 @@ def _sidebar(sources, hist):
             if st.button("🧹 New chat", use_container_width=True):
                 st.session_state.messages = []
                 st.session_state.selected_history_id = None
+                st.session_state.active_doc = None
                 st.rerun()
         with c2:
             if st.button("🗑️ Clear all", use_container_width=True):
@@ -262,6 +310,7 @@ def _sidebar(sources, hist):
                 history.clear()
                 st.session_state.messages = []
                 st.session_state.selected_history_id = None
+                st.session_state.active_doc = None
                 st.rerun()
 
 
@@ -290,7 +339,24 @@ def main() -> None:
         _hero()
         return
 
-    st.title("Chat with your documents")
+    # A scoped document may have been removed since it was opened.
+    if st.session_state.active_doc and st.session_state.active_doc not in sources:
+        st.session_state.active_doc = None
+
+    active_doc = st.session_state.active_doc
+
+    if active_doc:
+        st.title(f"📂 {active_doc}")
+        c1, c2 = st.columns([4, 1])
+        with c1:
+            st.caption("Questions are scoped to this document and its saved history.")
+        with c2:
+            if st.button("✕ Exit document", use_container_width=True):
+                st.session_state.active_doc = None
+                st.session_state.messages = []
+                st.rerun()
+    else:
+        st.title("Chat with your documents")
     _render_stats(sources, hist)
 
     for msg in st.session_state.messages:
@@ -299,7 +365,10 @@ def main() -> None:
             if msg.get("sources"):
                 _render_sources(msg["sources"])
 
-    prompt = st.chat_input("Ask a question about your documents…")
+    placeholder = (
+        f"Ask about {active_doc}…" if active_doc else "Ask a question about your documents…"
+    )
+    prompt = st.chat_input(placeholder)
     if not prompt:
         return
 
@@ -313,7 +382,7 @@ def main() -> None:
     ]
 
     with st.chat_message("assistant"):
-        stream, retrieval = answer(prompt, history=conv)
+        stream, retrieval = answer(prompt, history=conv, source=active_doc)
         if retrieval.is_empty:
             reply = "I couldn't find anything relevant in the indexed documents."
             st.markdown(reply)

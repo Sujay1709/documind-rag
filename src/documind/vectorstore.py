@@ -59,12 +59,22 @@ def add_documents(chunks: list[Document], source_name: str) -> int:
     return len(chunks)
 
 
-def query(prompt: str, n_results: int | None = None, settings: Settings | None = None) -> dict:
-    """Query the collection for the most similar chunks to ``prompt``."""
+def query(
+    prompt: str,
+    n_results: int | None = None,
+    source: str | None = None,
+    settings: Settings | None = None,
+) -> dict:
+    """Query the collection for the most similar chunks to ``prompt``.
+
+    If ``source`` is given, results are restricted to chunks from that document
+    (so a question can be scoped to a single file).
+    """
     settings = settings or get_settings()
     n_results = n_results or settings.n_results
     collection = get_collection()
-    return collection.query(query_texts=[prompt], n_results=n_results)
+    where = {"source": source} if source else None
+    return collection.query(query_texts=[prompt], n_results=n_results, where=where)
 
 
 def list_sources() -> list[str]:

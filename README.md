@@ -1,5 +1,10 @@
 # 📄 DocuMind
 
+[![CI](https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Built with Streamlit](https://img.shields.io/badge/built%20with-Streamlit-FF4B4B.svg)](https://streamlit.io/)
+
 **Local, privacy-first RAG assistant — chat with your PDFs entirely on your own machine.**
 
 DocuMind ingests PDF documents, indexes them in a local vector store, and answers
@@ -27,6 +32,23 @@ See [What's new](#whats-new) for the differences.
 - **Fully local & private** — uses Ollama for both embeddings and generation.
 - **Configurable** via environment variables (chunk size, models, retrieval depth…).
 - **Tested** core pipeline, with linting, Docker, and CI included.
+
+## Using DocuMind
+
+- **Upload & process** one or more PDFs from the sidebar to index them.
+- **Ask** questions in the chat; answers stream in with an expandable Sources
+  panel (file, page, relevance score).
+- **Revisit a document:** click any indexed document in the sidebar to reopen it
+  with its related chat history restored. While a document is open, questions are
+  scoped to just that file. Hit **Exit document** to return to all-document chat.
+- **History:** every interaction is saved and browsable from the sidebar History
+  panel, surviving restarts.
+
+## Screenshots
+
+> _Add screenshots/GIFs here, e.g._ `docs/landing.png`, `docs/chat.png`.
+> Run the app, capture the landing page and a chat with sources, and drop the
+> images in a `docs/` folder.
 
 ## Architecture
 
@@ -102,6 +124,12 @@ docker compose exec ollama ollama pull nomic-embed-text
 ```
 
 App: http://localhost:8501
+
+## Deploy to the cloud (free)
+
+DocuMind can run as a public Hugging Face Space (Docker) with Ollama bundled in
+the container — see **[DEPLOY.md](DEPLOY.md)** for step-by-step instructions. The
+Space files live in [`deploy/hf-spaces/`](deploy/hf-spaces/).
 
 ## Development
 

@@ -5,6 +5,10 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# curl is needed for the container HEALTHCHECK below.
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # System deps for PyMuPDF / sentence-transformers builds are bundled in wheels,
 # so only a minimal image is needed.
 COPY requirements.txt .

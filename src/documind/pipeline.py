@@ -25,14 +25,21 @@ class RetrievalResult:
         return not self.chunks
 
 
-def retrieve(question: str, settings: Settings | None = None) -> RetrievalResult:
+def retrieve(
+    question: str,
+    source: str | None = None,
+    settings: Settings | None = None,
+) -> RetrievalResult:
     """Retrieve candidate chunks for ``question`` and re-rank them.
 
     Returns the concatenated context string (fed to the LLM) and the ranked
-    chunks (used for citations in the UI).
+    chunks (used for citations in the UI). When ``source`` is set, retrieval is
+    restricted to that document.
     """
     settings = settings or get_settings()
-    results = vectorstore.query(question, n_results=settings.n_results, settings=settings)
+    results = vectorstore.query(
+        question, n_results=settings.n_results, source=source, settings=settings
+    )
 
     documents = (results.get("documents") or [[]])[0]
     metadatas = (results.get("metadatas") or [[]])[0]
@@ -52,15 +59,17 @@ def retrieve(question: str, settings: Settings | None = None) -> RetrievalResult
 def answer(
     question: str,
     history: list[dict] | None = None,
+    source: str | None = None,
     settings: Settings | None = None,
 ) -> tuple[Iterator[str], RetrievalResult]:
     """Run the full RAG pipeline.
 
     Returns a streaming token iterator and the retrieval result so the caller
-    can display both the answer and its sources.
+    can display both the answer and its sources. When ``source`` is set, the
+    answer is grounded only in that document.
     """
     from .llm import stream_answer  # local import keeps ollama optional for tests
 
-    retrieval = retrieve(question, settings=settings)
+    retrieval = retrieve(question, source=source, settings=settings)
     stream = stream_answer(retrieval.context, question, history=history)
     return stream, retrieval
