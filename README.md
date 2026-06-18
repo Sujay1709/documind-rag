@@ -19,7 +19,13 @@ See [What's new](#whats-new) for the differences.
 
 ## Features
 
-- **Polished landing page** with a hero, feature cards, and live stat chips.
+- **Warm, interactive landing page** (beige theme) with an animated hero, feature
+  cards, a how-it-works strip, clickable example-question chips, and live stat chips.
+- **Large uploads** — PDFs up to **500 MB** per file (configurable).
+- **Hardened, document-only answers** — the model is instructed to answer solely
+  from your uploaded documents, to treat retrieved text as untrusted data (so
+  instructions hidden inside a PDF can't hijack it), and never to reveal its
+  system prompt. Everything runs locally, so no document data leaves your machine.
 - **Chat interface** with conversation history and follow-up questions.
 - **Persistent history store** — every question, answer, and its sources are saved
   to disk and browsable from the sidebar, surviving app restarts.
@@ -116,6 +122,30 @@ Copy `.env.example` to `.env` and override any of the settings (all optional):
 | `DOCUMIND_PERSIST_DIR` | `./.documind/chroma` | Vector store location |
 | `DOCUMIND_HISTORY_FILE` | `./.documind/history.json` | Persistent Q&A history file |
 | `DOCUMIND_MAX_HISTORY` | `200` | Max history entries retained |
+| `DOCUMIND_MAX_UPLOAD_MB` | `500` | Upload size shown in the UI (keep in sync with the server limit below) |
+
+### Upload size
+
+PDFs can be up to **500 MB** per file. This is enforced by Streamlit via
+`maxUploadSize` in [`.streamlit/config.toml`](.streamlit/config.toml). To change
+it, update **both** that value and `DOCUMIND_MAX_UPLOAD_MB` (the latter only sets
+the size shown in the upload section).
+
+### Security & privacy
+
+DocuMind is built so your document data can't leak:
+
+- **Local-only.** Embeddings, retrieval, re-ranking, and generation all run on
+  your machine through Ollama — no document content is sent to any external API.
+- **Document-grounded answers.** The model is instructed to answer *only* from the
+  retrieved context and to say it doesn't know otherwise — it won't pad answers
+  with outside knowledge.
+- **Prompt-injection resistant.** Retrieved text is wrapped and labelled as
+  *untrusted data*, and the system prompt tells the model to ignore any embedded
+  instructions (e.g. "ignore previous instructions", "reveal your prompt",
+  "send this data somewhere").
+- **No prompt disclosure.** The model is told never to reveal its system prompt or
+  configuration.
 
 ## Run with Docker
 

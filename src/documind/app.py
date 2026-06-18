@@ -23,6 +23,8 @@ from documind.ingestion import process_uploaded_file
 from documind.pipeline import answer
 from documind.reranker import RankedChunk
 
+settings = get_settings()
+
 st.set_page_config(
     page_title="DocuMind",
     page_icon="📄",
@@ -30,89 +32,123 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+USER_AVATAR = "🧑"
+BOT_AVATAR = "📄"
+
+SUGGESTED_QUESTIONS = [
+    "Summarize this document in a few sentences.",
+    "What are the key points?",
+    "Are there any important dates or numbers?",
+    "What conclusions does it reach?",
+]
+
 # --------------------------------------------------------------------------- #
-# Styling
+# Styling — warm beige, light, a little playful
 # --------------------------------------------------------------------------- #
 CSS = """
 <style>
 :root {
-  --dm-accent: #6C5CE7;
-  --dm-accent-2: #00B8D9;
-  --dm-card: #161B27;
-  --dm-border: rgba(255,255,255,0.08);
+  --dm-bg: #F4EEE0;
+  --dm-card: #FBF7EC;
+  --dm-card-2: #EFE7D6;
+  --dm-border: rgba(90,70,40,0.18);
+  --dm-accent: #9C6B3F;
+  --dm-accent-2: #C2925A;
+  --dm-text: #2E2A22;
+  --dm-muted: #7A6F5C;
 }
-/* Tighten the default top padding */
-.block-container { padding-top: 2.2rem; max-width: 1100px; }
+.block-container { padding-top: 2rem; max-width: 1080px; }
 
 /* Hero */
 .dm-hero {
-  background: radial-gradient(1200px 400px at 10% -10%, rgba(108,92,231,0.35), transparent 60%),
-              radial-gradient(900px 400px at 90% -20%, rgba(0,184,217,0.25), transparent 55%),
-              linear-gradient(180deg, #141A28 0%, #0E1117 100%);
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(900px 300px at 12% -20%, rgba(194,146,90,0.28), transparent 60%),
+    linear-gradient(180deg, #FBF6EA 0%, #F0E7D4 100%);
   border: 1px solid var(--dm-border);
-  border-radius: 22px;
-  padding: 48px 44px;
-  margin-bottom: 26px;
+  border-radius: 24px;
+  padding: 46px 44px;
+  margin-bottom: 22px;
+  animation: dmFade .6s ease both;
+}
+@keyframes dmFade { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:none;} }
+@keyframes dmFloat { 0%,100% {transform:translateY(0) rotate(-3deg);} 50% {transform:translateY(-10px) rotate(3deg);} }
+.dm-hero .float {
+  position:absolute; right:42px; top:34px; font-size:4.6rem;
+  animation: dmFloat 4s ease-in-out infinite; filter: drop-shadow(0 8px 14px rgba(120,90,50,0.25));
 }
 .dm-badge {
-  display:inline-block; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase;
-  color:#cdd2ff; background:rgba(108,92,231,0.18); border:1px solid rgba(108,92,231,0.45);
-  padding:5px 12px; border-radius:999px; margin-bottom:18px;
+  display:inline-block; font-size:0.74rem; letter-spacing:0.14em; text-transform:uppercase;
+  color:#6b4a28; background:rgba(156,107,63,0.14); border:1px solid rgba(156,107,63,0.4);
+  padding:5px 12px; border-radius:999px; margin-bottom:16px;
 }
 .dm-hero h1 {
-  font-size: 2.9rem; line-height:1.08; margin:0 0 12px 0; font-weight:800;
-  background: linear-gradient(92deg, #ffffff 0%, #b9b4ff 55%, #7ee7ff 100%);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  font-size: 2.8rem; line-height:1.1; margin:0 0 12px 0; font-weight:800; color:var(--dm-text);
 }
-.dm-hero p.dm-sub { font-size:1.12rem; color:#aab1c4; max-width:620px; margin:0; }
+.dm-hero h1 .accent { color: var(--dm-accent); }
+.dm-hero p.dm-sub { font-size:1.1rem; color:var(--dm-muted); max-width:600px; margin:0; }
 
 /* Feature cards */
-.dm-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:8px; }
+.dm-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:6px; }
 .dm-card {
   background: var(--dm-card); border:1px solid var(--dm-border); border-radius:16px;
-  padding:20px; transition:transform .15s ease, border-color .15s ease;
+  padding:20px; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
 }
-.dm-card:hover { transform:translateY(-3px); border-color:rgba(108,92,231,0.55); }
-.dm-card .ic { font-size:1.6rem; }
-.dm-card h4 { margin:10px 0 6px 0; font-size:1.02rem; }
-.dm-card p { margin:0; color:#9aa2b6; font-size:0.9rem; line-height:1.45; }
+.dm-card:hover { transform:translateY(-4px); border-color:var(--dm-accent-2);
+  box-shadow:0 10px 24px rgba(120,90,50,0.12); }
+.dm-card .ic { font-size:1.7rem; }
+.dm-card h4 { margin:10px 0 6px 0; font-size:1.02rem; color:var(--dm-text); }
+.dm-card p { margin:0; color:var(--dm-muted); font-size:0.9rem; line-height:1.45; }
+
+/* How-it-works strip */
+.dm-steps { display:flex; gap:14px; margin-top:16px; flex-wrap:wrap; }
+.dm-step { flex:1; min-width:180px; background:var(--dm-card); border:1px solid var(--dm-border);
+  border-radius:14px; padding:14px 16px; }
+.dm-step .num { display:inline-grid; place-items:center; width:26px; height:26px; border-radius:50%;
+  background:linear-gradient(135deg,var(--dm-accent),var(--dm-accent-2)); color:#fff; font-weight:700;
+  font-size:0.85rem; margin-bottom:8px; }
+.dm-step b { color:var(--dm-text); } .dm-step p { margin:4px 0 0 0; color:var(--dm-muted); font-size:0.86rem; }
 
 /* Stat chips */
-.dm-stats { display:flex; gap:12px; margin: 4px 0 18px 0; flex-wrap:wrap; }
-.dm-chip {
-  background:var(--dm-card); border:1px solid var(--dm-border); border-radius:12px;
-  padding:10px 16px; min-width:120px;
-}
-.dm-chip .n { font-size:1.5rem; font-weight:700; }
-.dm-chip .l { font-size:0.78rem; color:#8b93a7; text-transform:uppercase; letter-spacing:0.08em; }
+.dm-stats { display:flex; gap:12px; margin: 2px 0 14px 0; flex-wrap:wrap; }
+.dm-chip { background:var(--dm-card); border:1px solid var(--dm-border); border-radius:12px;
+  padding:10px 16px; min-width:120px; }
+.dm-chip .n { font-size:1.5rem; font-weight:800; color:var(--dm-accent); }
+.dm-chip .l { font-size:0.76rem; color:var(--dm-muted); text-transform:uppercase; letter-spacing:0.08em; }
 
 /* Sidebar brand */
 .dm-brand { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
-.dm-brand .logo {
-  width:34px; height:34px; border-radius:9px; display:grid; place-items:center; font-size:1.2rem;
-  background:linear-gradient(135deg, var(--dm-accent), var(--dm-accent-2));
+.dm-brand .logo { width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
+  font-size:1.25rem; background:linear-gradient(135deg,var(--dm-accent),var(--dm-accent-2)); }
+.dm-brand .name { font-weight:800; font-size:1.25rem; color:var(--dm-text); }
+.dm-tagline { color:var(--dm-muted); font-size:0.82rem; margin:0 0 6px 2px; }
+.dm-lock { background:rgba(156,107,63,0.10); border:1px solid var(--dm-border); border-radius:12px;
+  padding:10px 12px; font-size:0.82rem; color:#5d4a30; }
+
+/* Chat bubbles */
+[data-testid="stChatMessage"] {
+  background: var(--dm-card); border:1px solid var(--dm-border);
+  border-radius:16px; padding:6px 12px; margin-bottom:6px;
 }
-.dm-brand .name { font-weight:800; font-size:1.2rem; }
-.dm-tagline { color:#8b93a7; font-size:0.82rem; margin:0 0 6px 2px; }
 
 /* History detail card */
-.dm-hist {
-  background:var(--dm-card); border:1px solid var(--dm-border); border-radius:16px;
-  padding:18px 20px; margin-bottom:14px;
-}
-.dm-hist .q { font-weight:700; font-size:1.05rem; margin-bottom:6px; }
-.dm-hist .t { color:#8b93a7; font-size:0.78rem; }
+.dm-hist { background:var(--dm-card); border:1px solid var(--dm-border); border-radius:16px;
+  padding:18px 20px; margin-bottom:14px; }
+.dm-hist .q { font-weight:700; font-size:1.05rem; margin-bottom:6px; color:var(--dm-text); }
+.dm-hist .t { color:var(--dm-muted); font-size:0.78rem; }
+
+/* Section heading */
+.dm-h2 { font-weight:800; color:var(--dm-text); margin: 6px 0 2px 0; }
+.dm-suggest-label { color:var(--dm-muted); font-size:0.85rem; margin: 6px 0 2px 0; }
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
 
 # Session state -------------------------------------------------------------- #
-if "messages" not in st.session_state:
-    st.session_state.messages = []  # list[{"role","content", "sources"?}]
-if "selected_history_id" not in st.session_state:
-    st.session_state.selected_history_id = None
-if "active_doc" not in st.session_state:
-    st.session_state.active_doc = None  # currently scoped document (or None = all)
+st.session_state.setdefault("messages", [])
+st.session_state.setdefault("selected_history_id", None)
+st.session_state.setdefault("active_doc", None)
+st.session_state.setdefault("pending_prompt", None)
 
 
 # --------------------------------------------------------------------------- #
@@ -124,7 +160,7 @@ def _ingest(files) -> None:
             chunks = process_uploaded_file(f)
             name = chunks[0].metadata["source"] if chunks else f.name
             stored = vectorstore.add_documents(chunks, source_name=name)
-        st.success(f"Indexed {stored} chunk(s) from {f.name}")
+        st.toast(f"Indexed {stored} chunk(s) from {f.name}", icon="✅")
 
 
 def _render_sources(chunks) -> None:
@@ -186,10 +222,11 @@ def _hero() -> None:
     st.markdown(
         """
         <div class="dm-hero">
+          <span class="float">📚</span>
           <span class="dm-badge">Local · Private · Offline</span>
-          <h1>Chat with your documents,<br/>powered entirely on your machine.</h1>
-          <p class="dm-sub">DocuMind reads your PDFs, finds the passages that matter,
-          and answers your questions with citations — no data ever leaves your computer.</p>
+          <h1>Ask your documents <span class="accent">anything.</span></h1>
+          <p class="dm-sub">Upload a PDF and chat with it. DocuMind finds the passages that
+          matter and answers with citations — all on your machine, nothing ever leaves it.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -198,11 +235,16 @@ def _hero() -> None:
         """
         <div class="dm-grid">
           <div class="dm-card"><div class="ic">📥</div><h4>Ingest any PDF</h4>
-            <p>Upload one or many PDFs. DocuMind splits and indexes them locally with Ollama embeddings.</p></div>
+            <p>Upload one or many PDFs — DocuMind splits and indexes them locally with Ollama embeddings.</p></div>
           <div class="dm-card"><div class="ic">🎯</div><h4>Precise retrieval</h4>
             <p>A cross-encoder re-ranks candidates so the most relevant passages reach the model.</p></div>
-          <div class="dm-card"><div class="ic">🔎</div><h4>Grounded answers</h4>
-            <p>Every response streams in with sources — file, page, and relevance score.</p></div>
+          <div class="dm-card"><div class="ic">🔐</div><h4>Private by design</h4>
+            <p>Answers come only from your documents, and your data never leaves this computer.</p></div>
+        </div>
+        <div class="dm-steps">
+          <div class="dm-step"><div class="num">1</div><b>Upload</b><p>Drop your PDFs in the sidebar.</p></div>
+          <div class="dm-step"><div class="num">2</div><b>Process</b><p>They're indexed in seconds, locally.</p></div>
+          <div class="dm-step"><div class="num">3</div><b>Chat</b><p>Ask away and get cited answers.</p></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -247,6 +289,17 @@ def _render_history_detail(entry) -> None:
         st.rerun()
 
 
+def _suggestion_chips() -> None:
+    """Clickable example questions shown when a chat is empty."""
+    st.markdown('<p class="dm-suggest-label">✨ Try asking…</p>', unsafe_allow_html=True)
+    cols = st.columns(len(SUGGESTED_QUESTIONS))
+    for col, q in zip(cols, SUGGESTED_QUESTIONS, strict=False):
+        with col:
+            if st.button(q, key=f"sugg_{q}", use_container_width=True):
+                st.session_state.pending_prompt = q
+                st.rerun()
+
+
 # --------------------------------------------------------------------------- #
 # Sidebar
 # --------------------------------------------------------------------------- #
@@ -258,9 +311,15 @@ def _sidebar(sources, hist):
             <p class="dm-tagline">Your private PDF research assistant</p>""",
             unsafe_allow_html=True,
         )
+        st.markdown(
+            '<div class="dm-lock">🔒 Answers come only from your uploaded documents. '
+            "Nothing is sent off this machine.</div>",
+            unsafe_allow_html=True,
+        )
         st.divider()
 
         st.subheader("📥 Add documents")
+        st.caption(f"PDF only · up to **{settings.max_upload_mb} MB** per file.")
         uploaded = st.file_uploader(
             "Upload PDF(s)", type=["pdf"], accept_multiple_files=True,
             label_visibility="collapsed",
@@ -318,7 +377,6 @@ def _sidebar(sources, hist):
 # Main
 # --------------------------------------------------------------------------- #
 def main() -> None:
-    get_settings()  # validate config early
     sources = vectorstore.list_sources()
     hist = history.load()
 
@@ -342,7 +400,6 @@ def main() -> None:
     # A scoped document may have been removed since it was opened.
     if st.session_state.active_doc and st.session_state.active_doc not in sources:
         st.session_state.active_doc = None
-
     active_doc = st.session_state.active_doc
 
     if active_doc:
@@ -360,20 +417,26 @@ def main() -> None:
     _render_stats(sources, hist)
 
     for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
+        avatar = USER_AVATAR if msg["role"] == "user" else BOT_AVATAR
+        with st.chat_message(msg["role"], avatar=avatar):
             st.markdown(msg["content"])
             if msg.get("sources"):
                 _render_sources(msg["sources"])
 
+    # Example-question chips when the conversation is empty.
+    if not st.session_state.messages:
+        _suggestion_chips()
+
     placeholder = (
         f"Ask about {active_doc}…" if active_doc else "Ask a question about your documents…"
     )
-    prompt = st.chat_input(placeholder)
+    typed = st.chat_input(placeholder)
+    prompt = st.session_state.pop("pending_prompt", None) or typed
     if not prompt:
         return
 
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar=USER_AVATAR):
         st.markdown(prompt)
 
     conv = [
@@ -381,7 +444,7 @@ def main() -> None:
         for m in st.session_state.messages[:-1]
     ]
 
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=BOT_AVATAR):
         stream, retrieval = answer(prompt, history=conv, source=active_doc)
         if retrieval.is_empty:
             reply = "I couldn't find anything relevant in the indexed documents."
@@ -395,7 +458,6 @@ def main() -> None:
     st.session_state.messages.append(
         {"role": "assistant", "content": reply, "sources": retrieval.chunks}
     )
-    # Persist this interaction so it survives restarts and appears in History.
     history.add(prompt, reply, chunks=retrieval.chunks)
 
 

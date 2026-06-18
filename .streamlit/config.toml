@@ -1,14 +1,18 @@
 # Streamlit theme & server configuration for DocuMind.
+# Warm beige (light) theme.
 
 [theme]
-primaryColor = "#6C5CE7"
-backgroundColor = "#0E1117"
-secondaryBackgroundColor = "#161B27"
-textColor = "#E6E8EF"
-font = "sans serif"
+base = "light"
+primaryColor = "#9C6B3F"            # warm mocha / tan
+backgroundColor = "#F4EEE0"         # beige
+secondaryBackgroundColor = "#EBE3D1" # darker cream (sidebar, cards)
+textColor = "#2E2A22"               # dark espresso
+font = "serif"
 
 [browser]
 gatherUsageStats = false
 
 [server]
 headless = true
+# Maximum upload size per file, in megabytes (default is 200).
+maxUploadSize = 500

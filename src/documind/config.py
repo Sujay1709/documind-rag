@@ -63,6 +63,15 @@ class Settings(BaseSettings):
     )
     collection_name: str = Field(default="documind")
 
+    # --- Uploads ---------------------------------------------------------
+    max_upload_mb: int = Field(
+        default=500,
+        ge=1,
+        le=2000,
+        description="Max upload size per file (MB). Keep in sync with "
+        "[server].maxUploadSize in .streamlit/config.toml.",
+    )
+
     # --- History ---------------------------------------------------------
     history_file: Path = Field(
         default=Path("./.documind/history.json"),
