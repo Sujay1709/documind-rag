@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
+from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from langchain_core.documents import Document
@@ -16,16 +17,23 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@lru_cache(maxsize=1)
-def get_collection() -> chromadb.Collection:
-    """Return (and cache) the persistent Chroma collection.
+def _persist_path(settings: Settings) -> Path:
+    """Absolute, created persist directory.
 
-    Caching avoids re-opening the DB and re-creating the embedding function on
-    every Streamlit rerun. chromadb is imported lazily so the package can be
-    imported without it (e.g. for unit tests that stub the store).
+    Chroma keys its internal client cache on this path string, and a *relative*
+    path can collide or go stale across Streamlit reruns (raising a KeyError in
+    Chroma's shared client). Resolving to an absolute path keeps the identifier
+    stable.
     """
+    path = settings.persist_dir.expanduser().resolve()
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _build_collection() -> chromadb.Collection:
     import chromadb
     from chromadb.api.types import Embeddable, EmbeddingFunction
+    from chromadb.config import Settings as ChromaSettings
     from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 
     settings = get_settings()
@@ -33,13 +41,40 @@ def get_collection() -> chromadb.Collection:
         url=settings.ollama_embeddings_url,
         model_name=settings.embedding_model,
     )
-    settings.persist_dir.mkdir(parents=True, exist_ok=True)
-    client = chromadb.PersistentClient(path=str(settings.persist_dir))
+    client = chromadb.PersistentClient(
+        path=str(_persist_path(settings)),
+        settings=ChromaSettings(anonymized_telemetry=False),
+    )
     return client.get_or_create_collection(
         name=settings.collection_name,
         embedding_function=cast(EmbeddingFunction[Embeddable], embedding_fn),
         metadata={"hnsw:space": "cosine"},
     )
+
+
+@lru_cache(maxsize=1)
+def get_collection() -> chromadb.Collection:
+    """Return (and cache) the persistent Chroma collection.
+
+    Caching avoids re-opening the DB and re-creating the embedding function on
+    every Streamlit rerun. chromadb is imported lazily so the package can be
+    imported without it (e.g. for unit tests that stub the store).
+
+    If Chroma's process-wide client cache gets into an inconsistent state across
+    reruns (a known ``KeyError`` in ``SharedSystemClient``), we clear it and
+    rebuild once rather than crashing the app.
+    """
+    try:
+        return _build_collection()
+    except KeyError:
+        logger.warning("Chroma client cache was inconsistent; clearing and retrying.")
+        try:
+            from chromadb.api.shared_system_client import SharedSystemClient
+
+            SharedSystemClient._identifier_to_system.clear()
+        except Exception:  # pragma: no cover - defensive only
+            pass
+        return _build_collection()
 
 
 def add_documents(chunks: list[Document], source_name: str) -> int:
