@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is the capital of France?",
+    "ground_truth": "Paris is the capital of France.",
+    "expected_sources": ["geography_pdf"],
+    "expected_keywords": ["Paris"]
+  },
+  {
+    "question": "When was the company founded?",
+    "ground_truth": "The company was founded in 2014.",
+    "expected_sources": ["company_report_pdf"],
+    "expected_keywords": ["2014", "founded"]
+  }
+]

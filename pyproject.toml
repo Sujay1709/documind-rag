@@ -33,6 +33,7 @@ dev = [
 
 [project.scripts]
 documind = "documind.app:main"
+documind-eval = "documind.evaluate:main"
 
 [project.urls]
 Homepage = "https://github.com/Sujay1709/documind-rag"

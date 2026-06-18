@@ -12,6 +12,9 @@ run:
 test:
 	pytest -q
 
+eval:
+	documind-eval --dataset eval/sample_dataset.json --out eval/report.json
+
 lint:
 	ruff check src tests
 

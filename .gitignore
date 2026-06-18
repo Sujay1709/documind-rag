@@ -19,6 +19,9 @@ env/
 demo-rag-chroma/
 *.sqlite3
 
+# Generated evaluation reports
+eval/report.json
+
 # IDE / OS
 .vscode/
 .idea/

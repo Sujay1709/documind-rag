@@ -31,6 +31,9 @@ See [What's new](#whats-new) for the differences.
 - **Streaming answers** rendered token-by-token.
 - **Fully local & private** — uses Ollama for both embeddings and generation.
 - **Configurable** via environment variables (chunk size, models, retrieval depth…).
+- **RAG evaluation harness** — measure retrieval (hit@k, recall, MRR) and answer
+  quality (token-F1, keyword recall, faithfulness, optional LLM judge). See
+  [EVAL.md](EVAL.md).
 - **Tested** core pipeline, with linting, Docker, and CI included.
 
 ## Using DocuMind

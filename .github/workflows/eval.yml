@@ -1,0 +1,50 @@
+name: RAG Eval (manual)
+
+# Generative evaluation needs a model server, so this is opt-in: trigger it
+# from the Actions tab ("Run workflow"). The default CI (ci.yml) covers the
+# pure-Python metric tests on every push/PR.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dataset:
+        description: "Path to the eval dataset JSON"
+        default: "eval/sample_dataset.json"
+        required: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Start Ollama and pull models
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          for _ in $(seq 1 30); do
+            curl -fsS http://localhost:11434/api/tags && break || sleep 2
+          done
+          ollama pull "${DOCUMIND_CHAT_MODEL:-llama3.2:3b}"
+          ollama pull "${DOCUMIND_EMBEDDING_MODEL:-nomic-embed-text}"
+
+      - name: Run evaluation
+        run: |
+          documind-eval --dataset "${{ github.event.inputs.dataset }}" --out eval/report.json
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-eval-report
+          path: eval/report.json
