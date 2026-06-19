@@ -29,7 +29,7 @@ st.set_page_config(
     page_title="DocuMind",
     page_icon="📄",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 USER_AVATAR = "🧑"
@@ -43,7 +43,7 @@ SUGGESTED_QUESTIONS = [
 ]
 
 # --------------------------------------------------------------------------- #
-# Styling — warm beige, light, a little playful
+# Styling — warm beige, minimalist top bar
 # --------------------------------------------------------------------------- #
 CSS = """
 <style>
@@ -57,73 +57,37 @@ CSS = """
   --dm-text: #2E2A22;
   --dm-muted: #7A6F5C;
 }
-.block-container { padding-top: 2rem; max-width: 1080px; }
+.block-container { padding-top: 1rem; max-width: 1040px; }
 
-/* Hero */
-.dm-hero {
-  position: relative; overflow: hidden;
-  background:
-    radial-gradient(900px 300px at 12% -20%, rgba(194,146,90,0.28), transparent 60%),
-    linear-gradient(180deg, #FBF6EA 0%, #F0E7D4 100%);
-  border: 1px solid var(--dm-border);
-  border-radius: 24px;
-  padding: 46px 44px;
-  margin-bottom: 22px;
-  animation: dmFade .6s ease both;
-}
-@keyframes dmFade { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:none;} }
-@keyframes dmFloat { 0%,100% {transform:translateY(0) rotate(-3deg);} 50% {transform:translateY(-10px) rotate(3deg);} }
-.dm-hero .float {
-  position:absolute; right:42px; top:34px; font-size:4.6rem;
-  animation: dmFloat 4s ease-in-out infinite; filter: drop-shadow(0 8px 14px rgba(120,90,50,0.25));
-}
-.dm-badge {
-  display:inline-block; font-size:0.74rem; letter-spacing:0.14em; text-transform:uppercase;
-  color:#6b4a28; background:rgba(156,107,63,0.14); border:1px solid rgba(156,107,63,0.4);
-  padding:5px 12px; border-radius:999px; margin-bottom:16px;
-}
-.dm-hero h1 {
-  font-size: 2.8rem; line-height:1.1; margin:0 0 12px 0; font-weight:800; color:var(--dm-text);
-}
-.dm-hero h1 .accent { color: var(--dm-accent); }
-.dm-hero p.dm-sub { font-size:1.1rem; color:var(--dm-muted); max-width:600px; margin:0; }
+/* Hide the default sidebar/collapse chrome — the top bar replaces it */
+[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none; }
 
-/* Feature cards */
-.dm-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:6px; }
-.dm-card {
-  background: var(--dm-card); border:1px solid var(--dm-border); border-radius:16px;
-  padding:20px; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+/* Minimalist top bar */
+.dm-bar {
+  display:flex; align-items:center; gap:10px;
+  background: linear-gradient(180deg, #FBF6EA 0%, #F3EBD9 100%);
+  border:1px solid var(--dm-border); border-radius:14px;
+  padding:10px 16px; margin-bottom:14px;
+  box-shadow:0 2px 10px rgba(120,90,50,0.06);
+  animation: dmFade .4s ease both;
 }
-.dm-card:hover { transform:translateY(-4px); border-color:var(--dm-accent-2);
-  box-shadow:0 10px 24px rgba(120,90,50,0.12); }
-.dm-card .ic { font-size:1.7rem; }
-.dm-card h4 { margin:10px 0 6px 0; font-size:1.02rem; color:var(--dm-text); }
-.dm-card p { margin:0; color:var(--dm-muted); font-size:0.9rem; line-height:1.45; }
+@keyframes dmFade { from {opacity:0; transform:translateY(-6px);} to {opacity:1; transform:none;} }
+.dm-bar .logo { width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
+  font-size:1.05rem; background:linear-gradient(135deg,var(--dm-accent),var(--dm-accent-2)); }
+.dm-bar .name { font-weight:800; font-size:1.12rem; color:var(--dm-text); letter-spacing:-0.01em; }
+.dm-bar .tag { color:var(--dm-muted); font-size:0.78rem; margin-left:2px; }
 
-/* How-it-works strip */
-.dm-steps { display:flex; gap:14px; margin-top:16px; flex-wrap:wrap; }
-.dm-step { flex:1; min-width:180px; background:var(--dm-card); border:1px solid var(--dm-border);
-  border-radius:14px; padding:14px 16px; }
-.dm-step .num { display:inline-grid; place-items:center; width:26px; height:26px; border-radius:50%;
-  background:linear-gradient(135deg,var(--dm-accent),var(--dm-accent-2)); color:#fff; font-weight:700;
-  font-size:0.85rem; margin-bottom:8px; }
-.dm-step b { color:var(--dm-text); } .dm-step p { margin:4px 0 0 0; color:var(--dm-muted); font-size:0.86rem; }
+/* Slide-down document-history list (rendered inside a popover) */
+.dm-drop-head { font-weight:800; color:var(--dm-text); margin:0 0 2px 0; font-size:0.95rem; }
+.dm-drop-sub { color:var(--dm-muted); font-size:0.78rem; margin:0 0 8px 0; }
+.dm-doc-meta { color:var(--dm-muted); font-size:0.72rem; margin:-6px 0 8px 6px; }
 
 /* Stat chips */
-.dm-stats { display:flex; gap:12px; margin: 2px 0 14px 0; flex-wrap:wrap; }
+.dm-stats { display:flex; gap:10px; margin: 2px 0 14px 0; flex-wrap:wrap; }
 .dm-chip { background:var(--dm-card); border:1px solid var(--dm-border); border-radius:12px;
-  padding:10px 16px; min-width:120px; }
-.dm-chip .n { font-size:1.5rem; font-weight:800; color:var(--dm-accent); }
-.dm-chip .l { font-size:0.76rem; color:var(--dm-muted); text-transform:uppercase; letter-spacing:0.08em; }
-
-/* Sidebar brand */
-.dm-brand { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
-.dm-brand .logo { width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
-  font-size:1.25rem; background:linear-gradient(135deg,var(--dm-accent),var(--dm-accent-2)); }
-.dm-brand .name { font-weight:800; font-size:1.25rem; color:var(--dm-text); }
-.dm-tagline { color:var(--dm-muted); font-size:0.82rem; margin:0 0 6px 2px; }
-.dm-lock { background:rgba(156,107,63,0.10); border:1px solid var(--dm-border); border-radius:12px;
-  padding:10px 12px; font-size:0.82rem; color:#5d4a30; }
+  padding:8px 14px; min-width:108px; }
+.dm-chip .n { font-size:1.35rem; font-weight:800; color:var(--dm-accent); }
+.dm-chip .l { font-size:0.72rem; color:var(--dm-muted); text-transform:uppercase; letter-spacing:0.08em; }
 
 /* Chat bubbles */
 [data-testid="stChatMessage"] {
@@ -137,8 +101,14 @@ CSS = """
 .dm-hist .q { font-weight:700; font-size:1.05rem; margin-bottom:6px; color:var(--dm-text); }
 .dm-hist .t { color:var(--dm-muted); font-size:0.78rem; }
 
+/* Minimalist empty state */
+.dm-empty { text-align:center; padding:48px 20px 24px; color:var(--dm-muted);
+  animation: dmFade .5s ease both; }
+.dm-empty .big { font-size:3rem; }
+.dm-empty h2 { color:var(--dm-text); font-weight:800; margin:8px 0 6px; }
+.dm-empty p { max-width:460px; margin:0 auto; font-size:0.95rem; }
+
 /* Section heading */
-.dm-h2 { font-weight:800; color:var(--dm-text); margin: 6px 0 2px 0; }
 .dm-suggest-label { color:var(--dm-muted); font-size:0.85rem; margin: 6px 0 2px 0; }
 </style>
 """
@@ -266,38 +236,32 @@ def _open_document(doc: str, hist) -> None:
     st.rerun()
 
 
-def _hero() -> None:
+def _upload_history(sources: list[str]) -> list[tuple[str, str]]:
+    """Indexed documents paired with their upload time, newest first.
+
+    Falls back to an empty timestamp for docs without a saved summary so they
+    still appear in the list (ordered last).
+    """
+    items: list[tuple[str, str]] = []
+    for s in sources:
+        summ = summary.get(s)
+        items.append((s, summ.timestamp if summ else ""))
+    items.sort(key=lambda it: it[1], reverse=True)
+    return items
+
+
+def _empty_state() -> None:
     st.markdown(
         """
-        <div class="dm-hero">
-          <span class="float">📚</span>
-          <span class="dm-badge">Local · Private · Offline</span>
-          <h1>Ask your documents <span class="accent">anything.</span></h1>
-          <p class="dm-sub">Upload a PDF and chat with it. DocuMind finds the passages that
-          matter and answers with citations — all on your machine, nothing ever leaves it.</p>
+        <div class="dm-empty">
+          <div class="big">📄</div>
+          <h2>Ask your documents anything.</h2>
+          <p>Open <b>📤 Upload</b> in the bar above, add a PDF, and DocuMind will index it
+          locally and answer your questions with citations — nothing leaves this machine.</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    st.markdown(
-        """
-        <div class="dm-grid">
-          <div class="dm-card"><div class="ic">📥</div><h4>Ingest any PDF</h4>
-            <p>Upload one or many PDFs — DocuMind splits and indexes them locally with Ollama embeddings.</p></div>
-          <div class="dm-card"><div class="ic">🎯</div><h4>Precise retrieval</h4>
-            <p>A cross-encoder re-ranks candidates so the most relevant passages reach the model.</p></div>
-          <div class="dm-card"><div class="ic">🔐</div><h4>Private by design</h4>
-            <p>Answers come only from your documents, and your data never leaves this computer.</p></div>
-        </div>
-        <div class="dm-steps">
-          <div class="dm-step"><div class="num">1</div><b>Upload</b><p>Drop your PDFs in the sidebar.</p></div>
-          <div class="dm-step"><div class="num">2</div><b>Process</b><p>They're indexed in seconds, locally.</p></div>
-          <div class="dm-step"><div class="num">3</div><b>Chat</b><p>Ask away and get cited answers.</p></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.info("👈 Upload a PDF in the sidebar and click **Process documents** to begin.")
 
 
 def _render_doc_stats(doc: str) -> None:
@@ -366,80 +330,100 @@ def _suggestion_chips() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Sidebar
+# Minimalist top bar
 # --------------------------------------------------------------------------- #
-def _sidebar(sources, hist):
-    with st.sidebar:
-        st.markdown(
-            """<div class="dm-brand"><div class="logo">📄</div>
-            <div class="name">DocuMind</div></div>
-            <p class="dm-tagline">Your private PDF research assistant</p>""",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            '<div class="dm-lock">🔒 Answers come only from your uploaded documents. '
-            "Nothing is sent off this machine.</div>",
-            unsafe_allow_html=True,
-        )
-        st.divider()
-
-        st.subheader("📥 Add documents")
+def _upload_popover() -> None:
+    """Slide-down panel for adding new PDFs."""
+    with st.popover("📤 Upload", use_container_width=True):
+        st.markdown('<p class="dm-drop-head">Add documents</p>', unsafe_allow_html=True)
         st.caption(f"PDF only · up to **{settings.max_upload_mb} MB** per file.")
         uploaded = st.file_uploader(
             "Upload PDF(s)", type=["pdf"], accept_multiple_files=True,
             label_visibility="collapsed",
         )
-        if uploaded and st.button("Process documents", type="primary", use_container_width=True):
+        if uploaded and st.button(
+            "Process documents", type="primary", use_container_width=True
+        ):
             processed = _ingest(uploaded)
             if processed:
                 # Jump straight into the freshly processed document's chat.
                 _open_document(processed[-1], history.load())
             st.rerun()
 
-        st.divider()
-        st.subheader("📚 Indexed documents")
-        st.caption("Click a document to revisit it with its chat history.")
-        if sources:
-            for s in sources:
-                active = st.session_state.active_doc == s
-                if st.button(
-                    f"{'📂' if active else '📄'} {s}",
-                    key=f"doc_{s}",
-                    use_container_width=True,
-                    type="primary" if active else "secondary",
-                ):
-                    _open_document(s, hist)
-        else:
-            st.caption("Nothing indexed yet.")
 
-        st.divider()
-        st.subheader("🕘 History")
-        if hist:
-            for entry in hist[:10]:
-                label = (entry.question[:42] + "…") if len(entry.question) > 42 else entry.question
-                if st.button(f"🔹 {label}", key=f"hist_{entry.id}", use_container_width=True):
-                    st.session_state.selected_history_id = entry.id
-                    st.rerun()
-        else:
+def _documents_popover(sources, hist) -> None:
+    """Slide-down list of the history of uploaded documents (newest first)."""
+    with st.popover(f"📚 Documents ({len(sources)})", use_container_width=True):
+        st.markdown(
+            '<p class="dm-drop-head">Uploaded documents</p>'
+            '<p class="dm-drop-sub">Most recent first — click one to open its chat.</p>',
+            unsafe_allow_html=True,
+        )
+        if not sources:
+            st.caption("Nothing indexed yet. Use 📤 Upload to add a PDF.")
+            return
+        for doc, ts in _upload_history(sources):
+            active = st.session_state.active_doc == doc
+            if st.button(
+                f"{'📂' if active else '📄'} {doc}",
+                key=f"doc_{doc}",
+                use_container_width=True,
+                type="primary" if active else "secondary",
+            ):
+                _open_document(doc, hist)
+            meta = f"🕒 {_fmt_ts(ts)}" if ts else "🕒 upload time unknown"
+            st.markdown(f'<div class="dm-doc-meta">{meta}</div>', unsafe_allow_html=True)
+
+
+def _history_popover(hist) -> None:
+    """Slide-down list of past questions."""
+    with st.popover("🕘 History", use_container_width=True):
+        st.markdown('<p class="dm-drop-head">Recent questions</p>', unsafe_allow_html=True)
+        if not hist:
             st.caption("Your past questions will appear here.")
+            return
+        for entry in hist[:10]:
+            label = (entry.question[:42] + "…") if len(entry.question) > 42 else entry.question
+            if st.button(f"🔹 {label}", key=f"hist_{entry.id}", use_container_width=True):
+                st.session_state.selected_history_id = entry.id
+                st.rerun()
 
-        st.divider()
-        c1, c2 = st.columns(2)
-        with c1:
-            if st.button("🧹 New chat", use_container_width=True):
-                st.session_state.messages = []
-                st.session_state.selected_history_id = None
-                st.session_state.active_doc = None
-                st.rerun()
-        with c2:
-            if st.button("🗑️ Clear all", use_container_width=True):
-                vectorstore.reset()
-                history.clear()
-                summary.clear()
-                st.session_state.messages = []
-                st.session_state.selected_history_id = None
-                st.session_state.active_doc = None
-                st.rerun()
+
+def _actions_popover() -> None:
+    """Slide-down panel for chat/data actions."""
+    with st.popover("⋯", use_container_width=True):
+        if st.button("🧹 New chat", use_container_width=True):
+            st.session_state.messages = []
+            st.session_state.selected_history_id = None
+            st.session_state.active_doc = None
+            st.rerun()
+        if st.button("🗑️ Clear all", use_container_width=True):
+            vectorstore.reset()
+            history.clear()
+            summary.clear()
+            st.session_state.messages = []
+            st.session_state.selected_history_id = None
+            st.session_state.active_doc = None
+            st.rerun()
+
+
+def _topbar(sources, hist) -> None:
+    st.markdown(
+        """<div class="dm-bar"><div class="logo">📄</div>
+        <div class="name">DocuMind</div>
+        <div class="tag">· private PDF research, on your machine</div></div>""",
+        unsafe_allow_html=True,
+    )
+    # Brand sits in its own row above; the controls line up beneath it.
+    c1, c2, c3, c4 = st.columns([1.2, 1.6, 1.2, 0.6])
+    with c1:
+        _upload_popover()
+    with c2:
+        _documents_popover(sources, hist)
+    with c3:
+        _history_popover(hist)
+    with c4:
+        _actions_popover()
 
 
 # --------------------------------------------------------------------------- #
@@ -449,7 +433,7 @@ def main() -> None:
     sources = vectorstore.list_sources()
     hist = history.load()
 
-    _sidebar(sources, hist)
+    _topbar(sources, hist)
 
     # History detail view takes over the main pane when an entry is selected.
     if st.session_state.selected_history_id:
@@ -463,7 +447,7 @@ def main() -> None:
         st.session_state.selected_history_id = None
 
     if not sources:
-        _hero()
+        _empty_state()
         return
 
     # A scoped document may have been removed since it was opened.
