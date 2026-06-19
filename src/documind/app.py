@@ -110,6 +110,27 @@ CSS = """
 
 /* Section heading */
 .dm-suggest-label { color:var(--dm-muted); font-size:0.85rem; margin: 6px 0 2px 0; }
+
+/* Chat composer attach control: a (+) that morphs into a 🔗 on click */
+.st-key-dm_attach button, .st-key-dm_attach_open button {
+  width:46px; height:46px; min-height:46px; padding:0; border-radius:50%;
+  font-size:1.3rem; line-height:1; display:grid; place-items:center;
+  border:1px solid var(--dm-border); color:#fff;
+  background:linear-gradient(135deg,var(--dm-accent),var(--dm-accent-2));
+  box-shadow:0 4px 12px rgba(120,90,50,0.22);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.st-key-dm_attach button:hover, .st-key-dm_attach_open button:hover {
+  transform: translateY(-2px) scale(1.06); filter:brightness(1.05);
+  box-shadow:0 6px 16px rgba(120,90,50,0.28);
+}
+/* The "broaden into a link" morph, played when the open-state button mounts */
+.st-key-dm_attach_open button { animation: dmMorph .34s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes dmMorph {
+  0%   { transform: scale(.45) rotate(-90deg); opacity:.35; }
+  60%  { transform: scale(1.18) rotate(10deg); }
+  100% { transform: scale(1) rotate(0); opacity:1; }
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -119,6 +140,7 @@ st.session_state.setdefault("messages", [])
 st.session_state.setdefault("selected_history_id", None)
 st.session_state.setdefault("active_doc", None)
 st.session_state.setdefault("pending_prompt", None)
+st.session_state.setdefault("attach_open", False)
 
 
 # --------------------------------------------------------------------------- #
@@ -426,6 +448,39 @@ def _topbar(sources, hist) -> None:
         _actions_popover()
 
 
+def _chat_attach() -> None:
+    """A (+) in the chat composer that broadens into a 🔗 and reveals an uploader.
+
+    Collapsed it shows a circular ``＋``; clicking it remounts the button as a
+    ``🔗`` with a spring "morph" animation and drops a file uploader beneath the
+    composer. Files are processed through the same pipeline as the top-bar
+    uploader, then the chat jumps into the freshly indexed document.
+    """
+    open_ = st.session_state.attach_open
+    # The key encodes the open/closed state so scoped CSS can style each phase.
+    key = "dm_attach_open" if open_ else "dm_attach"
+    glyph = "🔗" if open_ else "＋"
+    col, _ = st.columns([1, 9])
+    with col:
+        if st.button(glyph, key=key, help="Attach PDFs to this chat"):
+            st.session_state.attach_open = not open_
+            st.rerun()
+    if not open_:
+        return
+    uploaded = st.file_uploader(
+        "Attach PDF(s)", type=["pdf"], accept_multiple_files=True,
+        label_visibility="collapsed", key="dm_attach_files",
+    )
+    if uploaded and st.button(
+        "Upload & process", type="primary", key="dm_attach_go", use_container_width=True
+    ):
+        processed = _ingest(uploaded)
+        st.session_state.attach_open = False
+        if processed:
+            _open_document(processed[-1], history.load())
+        st.rerun()
+
+
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
@@ -481,6 +536,8 @@ def main() -> None:
     if not st.session_state.messages:
         _suggestion_chips()
 
+    # Composer: a (+) attach control that morphs into a 🔗, then the input box.
+    _chat_attach()
     placeholder = (
         f"Ask about {active_doc}…" if active_doc else "Ask a question about your documents…"
     )
