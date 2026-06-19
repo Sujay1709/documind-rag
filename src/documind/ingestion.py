@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import tempfile
 from pathlib import Path
 
@@ -15,8 +16,23 @@ from .config import Settings, get_settings
 logger = logging.getLogger(__name__)
 
 # Separators ordered from coarse to fine so the splitter prefers natural
-# boundaries (paragraphs, then sentences) before resorting to characters.
-_SEPARATORS = ["\n\n", "\n", ".", "?", "!", " ", ""]
+# boundaries: paragraphs, then lines, then sentence ends (with the trailing
+# space, so we don't split inside decimals/abbreviations like "3.5" or "U.S."),
+# then words. Keeping sentences intact yields cleaner, more complete chunks.
+_SEPARATORS = ["\n\n", "\n", ". ", "? ", "! ", "; ", ", ", " ", ""]
+
+_WS_RE = re.compile(r"[ \t]+")
+_NL_RE = re.compile(r"\n{3,}")
+
+
+def _clean(text: str) -> str:
+    """Normalise whitespace so chunks are tidy and embed consistently."""
+    text = text.replace("\r", "")
+    text = _WS_RE.sub(" ", text)        # collapse runs of spaces/tabs
+    text = _NL_RE.sub("\n\n", text)     # cap blank-line runs
+    # Strip trailing spaces on each line.
+    text = "\n".join(line.rstrip() for line in text.split("\n"))
+    return text.strip()
 
 
 def _build_splitter(settings: Settings) -> RecursiveCharacterTextSplitter:
@@ -24,6 +40,7 @@ def _build_splitter(settings: Settings) -> RecursiveCharacterTextSplitter:
         chunk_size=settings.chunk_size,
         chunk_overlap=settings.chunk_overlap,
         separators=_SEPARATORS,
+        keep_separator=True,
     )
 
 
@@ -48,11 +65,21 @@ def split_documents(
     grouped and cited back to the originating file.
     """
     settings = settings or get_settings()
-    chunks = _build_splitter(settings).split_documents(docs)
-    for chunk in chunks:
+    raw_chunks = _build_splitter(settings).split_documents(docs)
+
+    chunks: list[Document] = []
+    for chunk in raw_chunks:
+        cleaned = _clean(chunk.page_content)
+        # Drop empty/boilerplate fragments so retrieval sees only real content.
+        if len(cleaned) < settings.min_chunk_chars:
+            continue
+        chunk.page_content = cleaned
         chunk.metadata.setdefault("page", chunk.metadata.get("page", 0))
         chunk.metadata["source"] = source_name
-    logger.info("Split %s into %d chunk(s)", source_name, len(chunks))
+        chunk.metadata["chunk_index"] = len(chunks)
+        chunks.append(chunk)
+
+    logger.info("Split %s into %d clean chunk(s)", source_name, len(chunks))
     return chunks
 
 

@@ -47,13 +47,18 @@ class Settings(BaseSettings):
     )
 
     # --- Retrieval -------------------------------------------------------
-    chunk_size: int = Field(default=400, ge=50, le=4000)
-    chunk_overlap: int = Field(default=100, ge=0, le=1000)
+    # Larger, sentence-coherent chunks give the model enough surrounding context
+    # to produce complete answers (small 400-char chunks fragmented sentences).
+    chunk_size: int = Field(default=1000, ge=50, le=4000)
+    chunk_overlap: int = Field(default=200, ge=0, le=1000)
+    min_chunk_chars: int = Field(
+        default=40, ge=0, le=500, description="Drop chunks shorter than this after cleaning."
+    )
     n_results: int = Field(
-        default=10, ge=1, le=50, description="Candidates fetched from the vector store."
+        default=20, ge=1, le=50, description="Candidates fetched from the vector store."
     )
     top_k_rerank: int = Field(
-        default=3, ge=1, le=20, description="Chunks kept after re-ranking."
+        default=5, ge=1, le=20, description="Chunks kept after re-ranking."
     )
 
     # --- Storage ---------------------------------------------------------
