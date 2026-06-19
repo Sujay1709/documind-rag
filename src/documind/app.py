@@ -17,9 +17,9 @@ if str(_SRC) not in sys.path:
 
 import streamlit as st
 
-from documind import history, vectorstore
+from documind import history, summary, vectorstore
 from documind.config import get_settings
-from documind.ingestion import process_uploaded_file
+from documind.ingestion import document_stats, normalize_name, process_uploaded_file
 from documind.pipeline import answer
 from documind.reranker import RankedChunk
 
@@ -154,13 +154,49 @@ st.session_state.setdefault("pending_prompt", None)
 # --------------------------------------------------------------------------- #
 # Helpers
 # --------------------------------------------------------------------------- #
-def _ingest(files) -> None:
+def _ingest(files) -> list[str]:
+    """Process each file with live progress and an auto-generated summary."""
+    processed: list[str] = []
     for f in files:
-        with st.spinner(f"Processing {f.name}…"):
+        with st.status(f"Processing {f.name}…", expanded=True) as status:
+            st.write("📖 Reading the PDF…")
             chunks = process_uploaded_file(f)
-            name = chunks[0].metadata["source"] if chunks else f.name
-            stored = vectorstore.add_documents(chunks, source_name=name)
-        st.toast(f"Indexed {stored} chunk(s) from {f.name}", icon="✅")
+            name = chunks[0].metadata["source"] if chunks else normalize_name(f.name)
+
+            stats = document_stats(chunks)
+            st.write(
+                f"✂️ Split into **{stats['chunks']}** chunks "
+                f"(~{stats['words']:,} words across {stats['pages']} page(s))."
+            )
+
+            st.write("🧠 Creating embeddings & indexing…")
+            vectorstore.add_documents(chunks, source_name=name)
+
+            st.write("📝 Summarizing the document…")
+            box = st.empty()
+            acc: list[str] = []
+            try:
+                for tok in summary.stream_summary(name, chunks):
+                    acc.append(tok)
+                    box.markdown("".join(acc))
+                md = "".join(acc).strip()
+            except Exception as exc:  # Ollama unavailable etc.
+                md = ""
+                st.write(f"⚠️ Could not summarize automatically ({exc}).")
+            summary.save(name, md or "_Summary unavailable._", stats)
+
+            status.update(label=f"✓ {f.name} is ready", state="complete", expanded=False)
+        st.toast(f"{f.name} processed", icon="✅")
+        processed.append(name)
+    return processed
+
+
+def _summary_message(doc: str, summ) -> str:
+    return (
+        f"👋 Here's a quick briefing on **{doc}**:\n\n"
+        f"{summ.markdown}\n\n"
+        "Ask me anything about it — I'll answer from this document."
+    )
 
 
 def _render_sources(chunks) -> None:
@@ -210,11 +246,23 @@ def _messages_from_history(entries) -> list[dict]:
 
 
 def _open_document(doc: str, hist) -> None:
-    """Scope the session to ``doc`` and restore its related chat history."""
+    """Scope the session to ``doc`` and restore its related chat history.
+
+    If there's no prior conversation for this document, seed the chat with its
+    auto-generated summary so it opens with a useful briefing.
+    """
     st.session_state.active_doc = doc
     st.session_state.selected_history_id = None
     related = [e for e in hist if doc in e.documents]
-    st.session_state.messages = _messages_from_history(related)
+    if related:
+        st.session_state.messages = _messages_from_history(related)
+    else:
+        summ = summary.get(doc)
+        st.session_state.messages = (
+            [{"role": "assistant", "content": _summary_message(doc, summ)}]
+            if summ and summ.markdown
+            else []
+        )
     st.rerun()
 
 
@@ -250,6 +298,23 @@ def _hero() -> None:
         unsafe_allow_html=True,
     )
     st.info("👈 Upload a PDF in the sidebar and click **Process documents** to begin.")
+
+
+def _render_doc_stats(doc: str) -> None:
+    summ = summary.get(doc)
+    stats = summ.stats if summ else {}
+    if not stats:
+        return
+    st.markdown(
+        f"""
+        <div class="dm-stats">
+          <div class="dm-chip"><div class="n">{stats.get('pages', 0)}</div><div class="l">Pages</div></div>
+          <div class="dm-chip"><div class="n">{stats.get('words', 0):,}</div><div class="l">Words</div></div>
+          <div class="dm-chip"><div class="n">{stats.get('chunks', 0)}</div><div class="l">Chunks</div></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def _render_stats(sources, hist) -> None:
@@ -325,7 +390,10 @@ def _sidebar(sources, hist):
             label_visibility="collapsed",
         )
         if uploaded and st.button("Process documents", type="primary", use_container_width=True):
-            _ingest(uploaded)
+            processed = _ingest(uploaded)
+            if processed:
+                # Jump straight into the freshly processed document's chat.
+                _open_document(processed[-1], history.load())
             st.rerun()
 
         st.divider()
@@ -367,6 +435,7 @@ def _sidebar(sources, hist):
             if st.button("🗑️ Clear all", use_container_width=True):
                 vectorstore.reset()
                 history.clear()
+                summary.clear()
                 st.session_state.messages = []
                 st.session_state.selected_history_id = None
                 st.session_state.active_doc = None
@@ -412,9 +481,10 @@ def main() -> None:
                 st.session_state.active_doc = None
                 st.session_state.messages = []
                 st.rerun()
+        _render_doc_stats(active_doc)
     else:
         st.title("Chat with your documents")
-    _render_stats(sources, hist)
+        _render_stats(sources, hist)
 
     for msg in st.session_state.messages:
         avatar = USER_AVATAR if msg["role"] == "user" else BOT_AVATAR

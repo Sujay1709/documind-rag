@@ -51,6 +51,24 @@ def _build_messages(context: str, question: str, history: list[dict] | None) -> 
     return messages
 
 
+def stream_chat(messages: list[dict]) -> Iterator[str]:
+    """Stream a chat completion token-by-token for arbitrary messages.
+
+    Shared by answer generation and document summarization.
+    """
+    settings = get_settings()
+    client = ollama.Client(host=settings.ollama_base_url)
+    response = client.chat(
+        model=settings.chat_model,
+        stream=True,
+        messages=messages,
+    )
+    for chunk in response:
+        content = chunk.get("message", {}).get("content")
+        if content:
+            yield content
+
+
 def stream_answer(
     context: str,
     question: str,
@@ -60,14 +78,4 @@ def stream_answer(
 
     Yields content chunks as they arrive so the UI can render incrementally.
     """
-    settings = get_settings()
-    client = ollama.Client(host=settings.ollama_base_url)
-    response = client.chat(
-        model=settings.chat_model,
-        stream=True,
-        messages=_build_messages(context, question, history),
-    )
-    for chunk in response:
-        content = chunk.get("message", {}).get("content")
-        if content:
-            yield content
+    yield from stream_chat(_build_messages(context, question, history))

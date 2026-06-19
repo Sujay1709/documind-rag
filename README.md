@@ -21,6 +21,11 @@ See [What's new](#whats-new) for the differences.
 
 - **Warm, interactive landing page** (beige theme) with an animated hero, feature
   cards, a how-it-works strip, clickable example-question chips, and live stat chips.
+- **Live processing feedback** — a step-by-step status (reading → chunking →
+  embedding → summarizing) while a document is indexed.
+- **Auto document briefing** — on processing, the model generates an overview, a
+  table of contents, and key highlights, shown as the opening chat message; each
+  document also displays page/word/chunk stats. Briefings are cached per document.
 - **Large uploads** — PDFs up to **500 MB** per file (configurable).
 - **Hardened, document-only answers** — the model is instructed to answer solely
   from your uploaded documents, to treat retrieved text as untrusted data (so

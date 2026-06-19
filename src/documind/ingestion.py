@@ -90,3 +90,15 @@ def process_uploaded_file(uploaded_file, settings: Settings | None = None) -> li
 def normalize_name(file_name: str) -> str:
     """Make a file name safe to use as a vector-store id prefix."""
     return file_name.translate(str.maketrans({"-": "_", ".": "_", " ": "_"}))
+
+
+def document_stats(chunks: list[Document]) -> dict[str, int]:
+    """Quick stats for a processed document: pages, chunks, words, characters."""
+    pages = {c.metadata.get("page") for c in chunks if isinstance(c.metadata.get("page"), int)}
+    text = " ".join(c.page_content for c in chunks)
+    return {
+        "pages": (max(pages) + 1) if pages else 0,
+        "chunks": len(chunks),
+        "words": len(text.split()),
+        "characters": len(text),
+    }

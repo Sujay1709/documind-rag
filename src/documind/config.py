@@ -81,6 +81,18 @@ class Settings(BaseSettings):
         default=200, ge=1, le=10000, description="Maximum history entries to retain."
     )
 
+    # --- Summaries -------------------------------------------------------
+    summaries_file: Path = Field(
+        default=Path("./.documind/summaries.json"),
+        description="JSON file storing per-document auto-generated summaries.",
+    )
+    summary_char_budget: int = Field(
+        default=6000,
+        ge=10,
+        le=40000,
+        description="Max characters of document text fed to the summarizer.",
+    )
+
     @property
     def ollama_embeddings_url(self) -> str:
         return f"{self.ollama_base_url.rstrip('/')}/api/embeddings"
