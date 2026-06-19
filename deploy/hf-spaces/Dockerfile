@@ -11,6 +11,8 @@ ENV PYTHONUNBUFFERED=1 \
     # Keep all model/app data under a writable, persistable location.
     HOME=/data \
     OLLAMA_MODELS=/data/ollama \
+    # Keep models resident so a request never stalls reloading them.
+    OLLAMA_KEEP_ALIVE=-1 \
     DOCUMIND_OLLAMA_BASE_URL=http://localhost:11434 \
     DOCUMIND_PERSIST_DIR=/data/.documind/chroma \
     DOCUMIND_HISTORY_FILE=/data/.documind/history.json \

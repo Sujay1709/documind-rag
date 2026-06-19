@@ -16,3 +16,7 @@ gatherUsageStats = false
 headless = true
 # Maximum upload size per file, in megabytes (default is 200).
 maxUploadSize = 500
+# Stability: don't watch files for changes or auto-rerun (avoids the
+# "connection lost" / reload churn that interrupts a session).
+fileWatcherType = "none"
+runOnSave = false
