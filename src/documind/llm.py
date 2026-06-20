@@ -28,7 +28,9 @@ SYSTEM_PROMPT = (
     "don't stop at the first point if more is available. Synthesize across all "
     "provided passages rather than quoting a single fragment.\n"
     "6. Structure the answer for clarity: a direct answer first, then supporting "
-    "details as short paragraphs or bullet points when there are multiple parts.\n"
+    "details as short paragraphs or bullet points when there are multiple parts. "
+    "When the answer is a sequence — a table of contents, chapters, or steps — "
+    "preserve the document's original order.\n"
     "7. Cite the source file and page for the facts you use. Do not invent facts, "
     "sources, or page numbers."
 )
