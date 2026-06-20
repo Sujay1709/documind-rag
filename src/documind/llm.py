@@ -60,6 +60,13 @@ def stream_chat(messages: list[dict]) -> Iterator[str]:
     """Stream a chat completion token-by-token for arbitrary messages.
 
     Shared by answer generation and document summarization.
+
+    The ``options`` are explicit on purpose. Ollama otherwise falls back to the
+    model's default context window (often 2048 tokens) and silently truncates
+    anything beyond it — which dropped retrieved chunks mid-prompt and produced
+    "half" answers on large documents. ``num_ctx`` sizes the input window,
+    ``num_predict`` caps the output, and a low ``temperature`` keeps grounded
+    answers factual.
     """
     settings = get_settings()
     client = ollama.Client(host=settings.ollama_base_url)
@@ -67,6 +74,11 @@ def stream_chat(messages: list[dict]) -> Iterator[str]:
         model=settings.chat_model,
         stream=True,
         messages=messages,
+        options={
+            "num_ctx": settings.num_ctx,
+            "num_predict": settings.max_output_tokens,
+            "temperature": settings.temperature,
+        },
     )
     for chunk in response:
         content = chunk.get("message", {}).get("content")

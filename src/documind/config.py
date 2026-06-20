@@ -54,11 +54,50 @@ class Settings(BaseSettings):
     min_chunk_chars: int = Field(
         default=40, ge=0, le=500, description="Drop chunks shorter than this after cleaning."
     )
+    # Recall vs. precision: pull a generous candidate pool from the vector store,
+    # then let the cross-encoder keep the best few. Wider values matter for
+    # large documents and multi-chunk answers (e.g. a table of contents that
+    # spans several pages), where keeping only 5 chunks truncated the answer.
     n_results: int = Field(
-        default=20, ge=1, le=50, description="Candidates fetched from the vector store."
+        default=30, ge=1, le=80, description="Candidates fetched from the vector store."
     )
     top_k_rerank: int = Field(
-        default=5, ge=1, le=20, description="Chunks kept after re-ranking."
+        default=8, ge=1, le=20, description="Chunks kept after re-ranking."
+    )
+
+    # --- Generation (Ollama runtime options) -----------------------------
+    # The local model runs through Ollama; these map to `options` on the chat
+    # call. num_ctx is the most important: Ollama silently truncates anything
+    # past the context window, so a small default (2048) drops retrieved chunks
+    # mid-answer — the cause of "half" answers on large documents.
+    num_ctx: int = Field(
+        default=8192,
+        ge=512,
+        le=131072,
+        description="Token context window passed to Ollama (options.num_ctx).",
+    )
+    max_output_tokens: int = Field(
+        default=2048,
+        ge=-2,
+        le=32768,
+        description="Max tokens the model may generate (Ollama options.num_predict; "
+        "-1 = unlimited, -2 = fill context).",
+    )
+    temperature: float = Field(
+        default=0.2,
+        ge=0.0,
+        le=2.0,
+        description="Sampling temperature; low keeps grounded RAG answers factual.",
+    )
+
+    # --- Embedding / indexing -------------------------------------------
+    embed_batch_size: int = Field(
+        default=128,
+        ge=1,
+        le=4000,
+        description="Chunks embedded and upserted per batch. Bounds memory and "
+        "avoids Chroma max-batch errors when indexing very large PDFs "
+        "(thousands of chunks).",
     )
 
     # --- Storage ---------------------------------------------------------

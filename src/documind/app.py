@@ -5,6 +5,7 @@ Run with:  streamlit run src/documind/app.py
 
 from __future__ import annotations
 
+import math
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -43,21 +44,25 @@ SUGGESTED_QUESTIONS = [
 ]
 
 # --------------------------------------------------------------------------- #
-# Styling — warm beige, minimalist top bar
+# Styling — warm toasted-tan, minimalist top bar
 # --------------------------------------------------------------------------- #
 CSS = """
 <style>
 :root {
-  --dm-bg: #F4EEE0;
+  --dm-bg: #CDBC97;
   --dm-card: #FBF7EC;
   --dm-card-2: #EFE7D6;
-  --dm-border: rgba(90,70,40,0.18);
-  --dm-accent: #9C6B3F;
-  --dm-accent-2: #C2925A;
-  --dm-text: #2E2A22;
-  --dm-muted: #7A6F5C;
+  --dm-border: rgba(70,52,28,0.22);
+  --dm-accent: #8A5A33;
+  --dm-accent-2: #B07F4A;
+  --dm-text: #2A2620;
+  --dm-muted: #6B5F49;
 }
-.block-container { padding-top: 1rem; max-width: 1040px; }
+/* Generous top padding so the brand bar clears Streamlit's fixed header
+   instead of being clipped ("bleeding") at the top of the page. */
+.block-container { padding-top: 3.25rem; max-width: 1040px; }
+/* Keep the translucent header from overlapping the first row of content. */
+[data-testid="stHeader"] { background: transparent; }
 
 /* Hide the default sidebar/collapse chrome — the top bar replaces it */
 [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none; }
@@ -111,26 +116,16 @@ CSS = """
 /* Section heading */
 .dm-suggest-label { color:var(--dm-muted); font-size:0.85rem; margin: 6px 0 2px 0; }
 
-/* Chat composer attach control: a (+) that morphs into a 🔗 on click */
-.st-key-dm_attach button, .st-key-dm_attach_open button {
-  width:46px; height:46px; min-height:46px; padding:0; border-radius:50%;
-  font-size:1.3rem; line-height:1; display:grid; place-items:center;
-  border:1px solid var(--dm-border); color:#fff;
-  background:linear-gradient(135deg,var(--dm-accent),var(--dm-accent-2));
-  box-shadow:0 4px 12px rgba(120,90,50,0.22);
-  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
-}
-.st-key-dm_attach button:hover, .st-key-dm_attach_open button:hover {
-  transform: translateY(-2px) scale(1.06); filter:brightness(1.05);
-  box-shadow:0 6px 16px rgba(120,90,50,0.28);
-}
-/* The "broaden into a link" morph, played when the open-state button mounts */
-.st-key-dm_attach_open button { animation: dmMorph .34s cubic-bezier(.34,1.56,.64,1) both; }
-@keyframes dmMorph {
-  0%   { transform: scale(.45) rotate(-90deg); opacity:.35; }
-  60%  { transform: scale(1.18) rotate(10deg); }
-  100% { transform: scale(1) rotate(0); opacity:1; }
-}
+/* Highlight the (+) attach control built into the chat-input toolbar so it
+   reads as an upload affordance rather than blending into the input border. */
+[data-testid="stChatInput"] { border:1px solid var(--dm-border); }
+[data-testid="stChatInputSubmitButton"],
+[data-testid="stChatInputFileUploadButton"] { color: var(--dm-accent); }
+[data-testid="stChatInputFileUploadButton"]:hover { color: var(--dm-accent-2); }
+
+/* Source citation cards */
+.dm-src-head { font-weight:700; color:var(--dm-text); font-size:0.92rem; }
+.dm-src-rel { color:var(--dm-accent); font-weight:700; font-size:0.8rem; }
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -140,7 +135,6 @@ st.session_state.setdefault("messages", [])
 st.session_state.setdefault("selected_history_id", None)
 st.session_state.setdefault("active_doc", None)
 st.session_state.setdefault("pending_prompt", None)
-st.session_state.setdefault("attach_open", False)
 
 
 # --------------------------------------------------------------------------- #
@@ -162,7 +156,15 @@ def _ingest(files) -> list[str]:
             )
 
             st.write("🧠 Creating embeddings & indexing…")
-            vectorstore.add_documents(chunks, source_name=name)
+            # Large PDFs embed thousands of chunks; show batch progress so the
+            # step doesn't look frozen while Ollama works through them.
+            embed_bar = st.progress(0.0, text="Embedding chunks…")
+
+            def _on_progress(done: int, total: int) -> None:
+                embed_bar.progress(done / total, text=f"Embedded {done:,}/{total:,} chunks")
+
+            vectorstore.add_documents(chunks, source_name=name, progress=_on_progress)
+            embed_bar.empty()
 
             st.write("📝 Summarizing the document…")
             box = st.empty()
@@ -191,6 +193,25 @@ def _summary_message(doc: str, summ) -> str:
     )
 
 
+def _relevance_pct(score: float) -> int:
+    """Map a cross-encoder logit to a friendly 0–100% relevance.
+
+    The re-ranker emits unbounded logits (roughly -11…+11), which read poorly as
+    a raw "relevance 3.42". A logistic squash turns them into an intuitive
+    percentage for the citation cards.
+    """
+    return round(100 / (1 + math.exp(-score)))
+
+
+def _snippet(text: str, limit: int = 480) -> str:
+    """Trim a chunk to ``limit`` chars on a word boundary so it doesn't cut mid-word."""
+    text = " ".join(text.split())  # collapse stray whitespace for a tidy preview
+    if len(text) <= limit:
+        return text
+    cut = text[:limit].rsplit(" ", 1)[0]
+    return f"{cut}…"
+
+
 def _render_sources(chunks) -> None:
     if not chunks:
         return
@@ -198,9 +219,13 @@ def _render_sources(chunks) -> None:
         for i, chunk in enumerate(chunks, start=1):
             src = chunk.metadata.get("source", "unknown")
             page = chunk.metadata.get("page")
-            page_str = f", p.{page + 1}" if isinstance(page, int) else ""
-            st.markdown(f"**{i}. {src}{page_str}** · relevance `{chunk.score:.2f}`")
-            st.caption(chunk.text[:500] + ("…" if len(chunk.text) > 500 else ""))
+            page_str = f" · p.{page + 1}" if isinstance(page, int) else ""
+            st.markdown(
+                f'<span class="dm-src-head">{i}. {src}{page_str}</span> &nbsp; '
+                f'<span class="dm-src-rel">{_relevance_pct(chunk.score)}% match</span>',
+                unsafe_allow_html=True,
+            )
+            st.caption(_snippet(chunk.text))
 
 
 def _fmt_ts(iso: str) -> str:
@@ -329,12 +354,14 @@ def _render_history_detail(entry) -> None:
         with st.expander(f"📎 Sources ({len(entry.sources)})"):
             for i, s in enumerate(entry.sources, start=1):
                 page = s.get("page")
-                page_str = f", p.{page + 1}" if isinstance(page, int) else ""
+                page_str = f" · p.{page + 1}" if isinstance(page, int) else ""
                 st.markdown(
-                    f"**{i}. {s.get('source','unknown')}{page_str}** · "
-                    f"relevance `{s.get('score', 0):.2f}`"
+                    f'<span class="dm-src-head">{i}. {s.get("source","unknown")}{page_str}</span> '
+                    f'&nbsp; <span class="dm-src-rel">{_relevance_pct(float(s.get("score", 0)))}% '
+                    f"match</span>",
+                    unsafe_allow_html=True,
                 )
-                st.caption(s.get("snippet", ""))
+                st.caption(_snippet(s.get("snippet", "")))
     if st.button("← Back to chat"):
         st.session_state.selected_history_id = None
         st.rerun()
@@ -448,39 +475,6 @@ def _topbar(sources, hist) -> None:
         _actions_popover()
 
 
-def _chat_attach() -> None:
-    """A (+) in the chat composer that broadens into a 🔗 and reveals an uploader.
-
-    Collapsed it shows a circular ``＋``; clicking it remounts the button as a
-    ``🔗`` with a spring "morph" animation and drops a file uploader beneath the
-    composer. Files are processed through the same pipeline as the top-bar
-    uploader, then the chat jumps into the freshly indexed document.
-    """
-    open_ = st.session_state.attach_open
-    # The key encodes the open/closed state so scoped CSS can style each phase.
-    key = "dm_attach_open" if open_ else "dm_attach"
-    glyph = "🔗" if open_ else "＋"
-    col, _ = st.columns([1, 9])
-    with col:
-        if st.button(glyph, key=key, help="Attach PDFs to this chat"):
-            st.session_state.attach_open = not open_
-            st.rerun()
-    if not open_:
-        return
-    uploaded = st.file_uploader(
-        "Attach PDF(s)", type=["pdf"], accept_multiple_files=True,
-        label_visibility="collapsed", key="dm_attach_files",
-    )
-    if uploaded and st.button(
-        "Upload & process", type="primary", key="dm_attach_go", use_container_width=True
-    ):
-        processed = _ingest(uploaded)
-        st.session_state.attach_open = False
-        if processed:
-            _open_document(processed[-1], history.load())
-        st.rerun()
-
-
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
@@ -536,13 +530,31 @@ def main() -> None:
     if not st.session_state.messages:
         _suggestion_chips()
 
-    # Composer: a (+) attach control that morphs into a 🔗, then the input box.
-    _chat_attach()
+    # Composer: a single chat-input toolbar whose built-in (+) attaches PDFs and
+    # whose text box asks questions. Attaching a PDF here runs it through the same
+    # ingest pipeline as the top-bar uploader.
     placeholder = (
         f"Ask about {active_doc}…" if active_doc else "Ask a question about your documents…"
     )
-    typed = st.chat_input(placeholder)
-    prompt = st.session_state.pop("pending_prompt", None) or typed
+    submission = st.chat_input(
+        placeholder, accept_file="multiple", file_type=["pdf"]
+    )
+
+    pending = st.session_state.pop("pending_prompt", None)
+    prompt = pending
+    files = []
+    if submission:
+        # With accept_file set, chat_input returns an object carrying both the
+        # typed text and any attached files (either may be empty).
+        prompt = (submission.text or "").strip() or pending
+        files = submission.files or []
+
+    if files:
+        processed = _ingest(files)
+        if processed and not prompt:
+            # Attached a PDF with no question → open its chat with the summary.
+            _open_document(processed[-1], history.load())
+
     if not prompt:
         return
 
