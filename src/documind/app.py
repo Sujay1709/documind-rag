@@ -160,8 +160,10 @@ def _ingest(files) -> list[str]:
             # step doesn't look frozen while Ollama works through them.
             embed_bar = st.progress(0.0, text="Embedding chunks…")
 
-            def _on_progress(done: int, total: int) -> None:
-                embed_bar.progress(done / total, text=f"Embedded {done:,}/{total:,} chunks")
+            # ``bar`` is bound as a default so the closure captures *this*
+            # iteration's progress widget (ruff B023), not the loop variable.
+            def _on_progress(done: int, total: int, bar=embed_bar) -> None:
+                bar.progress(done / total, text=f"Embedded {done:,}/{total:,} chunks")
 
             vectorstore.add_documents(chunks, source_name=name, progress=_on_progress)
             embed_bar.empty()
