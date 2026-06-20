@@ -1,12 +1,12 @@
 # Streamlit theme & server configuration for DocuMind.
-# Warm beige (light) theme.
+# Warm, deep "toasted-tan" (light) theme.
 
 [theme]
 base = "light"
-primaryColor = "#9C6B3F"            # warm mocha / tan
-backgroundColor = "#F4EEE0"         # beige
-secondaryBackgroundColor = "#EBE3D1" # darker cream (sidebar, cards)
-textColor = "#2E2A22"               # dark espresso
+primaryColor = "#8A5A33"            # deeper mocha
+backgroundColor = "#CDBC97"         # toasted tan (darker than the old beige)
+secondaryBackgroundColor = "#E7DCC4" # lighter cream so cards/inputs pop on the darker page
+textColor = "#2A2620"               # dark espresso
 font = "serif"
 
 [browser]
