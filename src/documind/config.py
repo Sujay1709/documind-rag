@@ -65,11 +65,7 @@ class Settings(BaseSettings):
         default=30, ge=1, le=80, description="Candidates fetched from the vector store."
     )
     top_k_rerank: int = Field(
-<<<<<<< .merge_file_h4CtzA
-        default=8, ge=1, le=20, description="Chunks kept after re-ranking."
-=======
         default=12, ge=1, le=20, description="Chunks kept after re-ranking."
->>>>>>> .merge_file_0bje0T
     )
 
     # --- Generation (Ollama runtime options) -----------------------------
