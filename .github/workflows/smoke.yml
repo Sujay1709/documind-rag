@@ -1,0 +1,70 @@
+name: Web app smoke
+
+# Boots the long-running web app (no Ollama needed) and hits the public
+# endpoints to confirm the routes are wired up. Catches the obvious "did the
+# import break?" and "did a route change shape?" regressions that pure unit
+# tests miss.
+#
+# Runs on every push to main and on PRs touching the webapp or its deps.
+
+on:
+  push:
+    branches: [main, feat/**]
+  pull_request:
+    paths:
+      - "src/documind/webapp/**"
+      - "src/documind/webapp.py"
+      - "tests/test_webapp.py"
+      - "scripts/smoke_webapp.py"
+      - ".github/workflows/smoke.yml"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest -q tests/test_webapp.py
+
+      - name: Boot the web app
+        env:
+          # Point the app at a no-op Ollama; /healthz will return 503 but the
+          # smoke checks tolerate that. We only need the Python process to
+          # bind a port and serve the public surface.
+          DOCUMIND_OLLAMA_BASE_URL: http://127.0.0.1:11434
+          DOCUMIND_API_TOKEN: ""
+          DOCUMIND_SUMMARIZE_ON_UPLOAD: "false"
+          DOCUMIND_RATE_LIMIT_PER_MIN: "0"
+          PORT: "8765"
+        run: |
+          uvicorn documind.webapp:app --host 127.0.0.1 --port 8765 \
+            > /tmp/uvicorn.log 2>&1 &
+          echo "uvicorn pid=$!"
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/ -o /dev/null; then
+              echo "uvicorn up after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run smoke checks
+        env:
+          DOCUMIND_BASE_URL: http://127.0.0.1:8765
+        run: python scripts/smoke_webapp.py
+
+      - name: Dump uvicorn log on failure
+        if: failure()
+        run: tail -100 /tmp/uvicorn.log
