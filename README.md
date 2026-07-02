@@ -3,7 +3,7 @@
 [![CI](https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Built with Streamlit](https://img.shields.io/badge/built%20with-Streamlit-FF4B4B.svg)](https://streamlit.io/)
+[![Built with Starlette + Streamlit](https://img.shields.io/badge/built%20with-Starlette-FF4B4B.svg)](https://www.starlette.io/)
 
 **Local, privacy-first RAG assistant — chat with your PDFs entirely on your own machine.**
 
@@ -45,9 +45,41 @@ See [What's new](#whats-new) for the differences.
 - **RAG evaluation harness** — measure retrieval (hit@k, recall, MRR) and answer
   quality (token-F1, keyword recall, faithfulness, optional LLM judge). See
   [EVAL.md](EVAL.md).
+- **Multi-config benchmark** — same dataset, isolated config overrides, side-by-side
+  Markdown report. Use it to defend choices like chunk size and top_k. Run with
+  `make benchmark` (see [`scripts/benchmark.py`](scripts/benchmark.py)).
+- **Public web app (`documind-web`)** — a long-running Starlette/uvicorn server
+  that keeps the LLM warm between requests, exposes `/upload` (multipart PDF),
+  `/chat` (SSE stream), `/api/chat` (single JSON), `/healthz`, and a single-page
+  app at `/`. Per-visitor rate limit, optional `DOCUMIND_API_TOKEN` gate, JSON-line
+  audit log, and a Dockerfile that bundles Ollama for one-command deploys.
 - **Tested** core pipeline, with linting, Docker, and CI included.
+- **Live smoke test** — every PR runs `scripts/smoke_webapp.py` against a
+  freshly-booted uvicorn process (see `.github/workflows/smoke.yml`) so a
+  broken route surfaces before deploy. Catch the "did the import break?"
+  regressions that pure unit tests miss.
 
-## Using DocuMind
+## Public web app (recommended)
+
+DocuMind ships a long-running **Starlette + uvicorn** web app (`documind-web`) that keeps the LLM and vector store warm between requests. It's the right surface for HF Spaces, Render, Fly.io, Cloud Run, or your own VPS.
+
+```bash
+# Local
+./start-web.sh                                 # http://localhost:8000
+
+# Container (Ollama bundled)
+docker compose up --build                      # http://localhost:8000
+
+# Hugging Face Space — see DEPLOY.md
+```
+
+Endpoints: `/` (SPA), `/upload` (multipart PDF), `/chat` (SSE stream), `/api/chat` (single JSON), `/healthz`, `/api/sources`. The same `documind.pipeline` powers both surfaces, so the Streamlit app stays available for local use.
+
+See **[DEPLOY.md](DEPLOY.md)** for HF Spaces, Render, Fly.io, and Cloud Run steps.
+
+---
+
+## Using DocuMind (local Streamlit UI)
 
 - **Upload & process** one or more PDFs from the sidebar to index them.
 - **Ask** questions in the chat; answers stream in with an expandable Sources
@@ -60,9 +92,13 @@ See [What's new](#whats-new) for the differences.
 
 ## Screenshots
 
-> _Add screenshots/GIFs here, e.g._ `docs/landing.png`, `docs/chat.png`.
-> Run the app, capture the landing page and a chat with sources, and drop the
-> images in a `docs/` folder.
+![Landing](docs/landing.png)
+
+![Chat with sources](docs/chat.png)
+
+These are baked from `docs/landing.svg` and `docs/chat.svg` so the README is
+never broken when the app isn't running. To replace them with screenshots
+of the live app, follow [`docs/README.md`](docs/README.md).
 
 ## Architecture
 
@@ -110,6 +146,8 @@ streamlit run src/documind/app.py
 Open http://localhost:8501, upload one or more PDFs, click **Process documents**,
 then ask questions.
 
+Looking for the resume / interview narrative? See [`RESUME.md`](RESUME.md).
+
 ## Configuration
 
 Copy `.env.example` to `.env` and override any of the settings (all optional):
@@ -120,12 +158,17 @@ Copy `.env.example` to `.env` and override any of the settings (all optional):
 | `DOCUMIND_CHAT_MODEL` | `llama3.2:3b` | Generation model |
 | `DOCUMIND_EMBEDDING_MODEL` | `nomic-embed-text:latest` | Embedding model |
 | `DOCUMIND_RERANKER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Cross-encoder |
-| `DOCUMIND_CHUNK_SIZE` | `400` | Characters per chunk |
-| `DOCUMIND_CHUNK_OVERLAP` | `100` | Overlap between chunks |
-| `DOCUMIND_N_RESULTS` | `10` | Candidates retrieved before re-ranking |
-| `DOCUMIND_TOP_K_RERANK` | `3` | Chunks kept after re-ranking |
+| `DOCUMIND_CHUNK_SIZE` | `1000` | Characters per chunk |
+| `DOCUMIND_CHUNK_OVERLAP` | `200` | Overlap between chunks |
+| `DOCUMIND_N_RESULTS` | `30` | Candidates retrieved before re-ranking |
+| `DOCUMIND_TOP_K_RERANK` | `12` | Chunks kept after re-ranking |
 | `DOCUMIND_PERSIST_DIR` | `./.documind/chroma` | Vector store location |
 | `DOCUMIND_HISTORY_FILE` | `./.documind/history.json` | Persistent Q&A history file |
+| `DOCUMIND_API_TOKEN` | _empty_ | If set, `/upload` and `/chat` require `X-Documind-Token` |
+| `DOCUMIND_RATE_LIMIT_PER_MIN` | `20` | Per-visitor chat cap; `0` disables |
+| `DOCUMIND_SUMMARIZE_ON_UPLOAD` | `true` | Skip the post-upload summary in public demos |
+| `DOCUMIND_MAX_ANSWER_TOKENS` | `1500` | Char cap (×4) per streamed answer |
+| `DOCUMIND_UPLOAD_DIR` | `./uploads` | Admin path-upload reads from this dir only |
 | `DOCUMIND_MAX_HISTORY` | `200` | Max history entries retained |
 | `DOCUMIND_MAX_UPLOAD_MB` | `500` | Upload size shown in the UI (keep in sync with the server limit below) |
 

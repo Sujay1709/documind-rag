@@ -5,22 +5,20 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# curl is needed for the container HEALTHCHECK below.
+# curl is used for the HEALTHCHECK.
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# System deps for PyMuPDF / sentence-transformers builds are bundled in wheels,
-# so only a minimal image is needed.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 RUN pip install --no-cache-dir -e .
 
-EXPOSE 8501
+# Default to the long-running web app (Starlette/uvicorn). Override with
+# `command:` in docker-compose.yml to keep using the Streamlit UI.
+ENV PORT=8000
+EXPOSE 8000
+HEALTHCHECK CMD curl --fail http://localhost:${PORT}/healthz || exit 1
 
-# Ollama is expected to run on the host / another container; point at it via
-# DOCUMIND_OLLAMA_BASE_URL (see docker-compose.yml).
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
-
-CMD ["streamlit", "run", "src/documind/app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+CMD ["./start-web.sh"]

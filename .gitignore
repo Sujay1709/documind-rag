@@ -34,3 +34,9 @@ eval/report.json
 
 # Model caches (sentence-transformers / HF)
 .cache/
+
+# Web app runtime
+.documind/audit.log
+
+# Editor / OS noise
+.DS_Store

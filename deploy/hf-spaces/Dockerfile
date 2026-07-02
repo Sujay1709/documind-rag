@@ -1,6 +1,8 @@
 # Hugging Face Spaces (Docker SDK) image for DocuMind.
-# Bundles Ollama + the Streamlit app in a single container that listens on 7860
-# (the port Spaces expects). Models are pulled on first boot by start.sh.
+# Bundles Ollama + the long-running web app in a single container that listens
+# on 7860 (the port Spaces expects). Models are pulled on first boot by
+# start.sh, and the API stays up between requests so users don't pay the
+# Streamlit-rerun penalty.
 #
 # Build context = repository root. From the repo root:
 #   docker build -f deploy/hf-spaces/Dockerfile -t documind-space .
@@ -16,7 +18,9 @@ ENV PYTHONUNBUFFERED=1 \
     DOCUMIND_OLLAMA_BASE_URL=http://localhost:11434 \
     DOCUMIND_PERSIST_DIR=/data/.documind/chroma \
     DOCUMIND_HISTORY_FILE=/data/.documind/history.json \
-    HF_HOME=/data/hf
+    DOCUMIND_SUMMARIES_FILE=/data/.documind/summaries.json \
+    HF_HOME=/data/hf \
+    PORT=7860
 
 # curl is used to install Ollama and for health checks.
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \

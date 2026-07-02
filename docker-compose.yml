@@ -1,3 +1,20 @@
+# DocuMind — local docker-compose.
+#
+# Two services:
+#   ollama    — the model server (llama3.2:3b + nomic-embed-text pulled on first boot)
+#   documind  — the long-running web app (uvicorn on :8000 by default)
+#
+# Bring it up with:
+#   docker compose up --build
+# Then open http://localhost:8000
+#
+# Pull the models (first boot only):
+#   docker compose exec ollama ollama pull llama3.2:3b
+#   docker compose exec ollama ollama pull nomic-embed-text
+#
+# To run the legacy Streamlit UI on :8501 instead, set DOCUMIND_CMD=streamlit
+# and override `command:` for the `documind` service.
+
 services:
   ollama:
     image: ollama/ollama:latest
@@ -5,20 +22,29 @@ services:
       - "11434:11434"
     volumes:
       - ollama:/root/.ollama
-    # Pull models once the container is up, e.g.:
-    #   docker compose exec ollama ollama pull llama3.2:3b
-    #   docker compose exec ollama ollama pull nomic-embed-text
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   documind:
     build: .
     ports:
-      - "8501:8501"
+      - "8000:8000"      # the web app
+      # - "8501:8501"    # uncomment to also expose the Streamlit UI
     environment:
       DOCUMIND_OLLAMA_BASE_URL: http://ollama:11434
+      DOCUMIND_PERSIST_DIR: /data/.documind/chroma
+      DOCUMIND_HISTORY_FILE: /data/.documind/history.json
+      DOCUMIND_SUMMARIES_FILE: /data/.documind/summaries.json
+      # DOCUMIND_API_TOKEN: changeme   # require X-Documind-Token for /upload and /chat
+      DOCUMIND_RATE_LIMIT_PER_MIN: "30"
     volumes:
-      - documind-data:/app/.documind
+      - documind-data:/data/.documind
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
 
 volumes:
   ollama:
