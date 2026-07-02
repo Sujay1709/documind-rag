@@ -40,3 +40,14 @@ eval/report.json
 
 # Editor / OS noise
 .DS_Store
+
+# Session scratch (Codex CLI, browser artifacts, working copies)
+.claude/
+.playwright-mcp/
+docs/
+documind/
+sample_pdfs/
+
+# Generated evaluation reports (regenerate with make benchmark)
+eval/benchmark.json
+eval/benchmark.md

@@ -2,7 +2,7 @@
 # Warm, deep "toasted-tan" (light) theme.
 
 [theme]
-base = "light"
+base = "dark"
 primaryColor = "#8A5A33"            # deeper mocha
 backgroundColor = "#CDBC97"         # toasted tan (darker than the old beige)
 secondaryBackgroundColor = "#E7DCC4" # lighter cream so cards/inputs pop on the darker page
