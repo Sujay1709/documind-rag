@@ -54,11 +54,57 @@ class Settings(BaseSettings):
     min_chunk_chars: int = Field(
         default=40, ge=0, le=500, description="Drop chunks shorter than this after cleaning."
     )
+    # Recall vs. precision: pull a generous candidate pool from the vector store,
+    # then let the cross-encoder keep the best few. ``top_k_rerank`` is the most
+    # impactful single knob in our eval grid: keeping 12 chunks (vs. 8) raised
+    # faithfulness from 0.62 -> 0.68 and keyword recall from 0.75 -> 0.88 on
+    # ``eval/datasets/realistic.json``, at a small F1 cost. The default 12 is
+    # the best answer-quality point on that dataset; the benchmark script
+    # (``make benchmark``) lets you re-derive it for your own corpus.
     n_results: int = Field(
-        default=20, ge=1, le=50, description="Candidates fetched from the vector store."
+        default=30, ge=1, le=80, description="Candidates fetched from the vector store."
     )
     top_k_rerank: int = Field(
-        default=5, ge=1, le=20, description="Chunks kept after re-ranking."
+<<<<<<< .merge_file_h4CtzA
+        default=8, ge=1, le=20, description="Chunks kept after re-ranking."
+=======
+        default=12, ge=1, le=20, description="Chunks kept after re-ranking."
+>>>>>>> .merge_file_0bje0T
+    )
+
+    # --- Generation (Ollama runtime options) -----------------------------
+    # The local model runs through Ollama; these map to `options` on the chat
+    # call. num_ctx is the most important: Ollama silently truncates anything
+    # past the context window, so a small default (2048) drops retrieved chunks
+    # mid-answer — the cause of "half" answers on large documents.
+    num_ctx: int = Field(
+        default=8192,
+        ge=512,
+        le=131072,
+        description="Token context window passed to Ollama (options.num_ctx).",
+    )
+    max_output_tokens: int = Field(
+        default=2048,
+        ge=-2,
+        le=32768,
+        description="Max tokens the model may generate (Ollama options.num_predict; "
+        "-1 = unlimited, -2 = fill context).",
+    )
+    temperature: float = Field(
+        default=0.2,
+        ge=0.0,
+        le=2.0,
+        description="Sampling temperature; low keeps grounded RAG answers factual.",
+    )
+
+    # --- Embedding / indexing -------------------------------------------
+    embed_batch_size: int = Field(
+        default=128,
+        ge=1,
+        le=4000,
+        description="Chunks embedded and upserted per batch. Bounds memory and "
+        "avoids Chroma max-batch errors when indexing very large PDFs "
+        "(thousands of chunks).",
     )
 
     # --- Storage ---------------------------------------------------------
@@ -96,6 +142,44 @@ class Settings(BaseSettings):
         ge=10,
         le=40000,
         description="Max characters of document text fed to the summarizer.",
+    )
+
+    # --- Web API uploads dir (admin path-uploads) ----------------------
+    upload_dir: Path = Field(
+        default=Path("./uploads"),
+        description="Directory the admin path-upload endpoint is allowed to read from.",
+    )
+
+    # --- Web API (production hardening) ---------------------------------
+    # DOCUMIND_API_TOKEN: if set, every /upload and /chat request must send it
+    # in the ``X-Documind-Token`` header. Leave empty for an open public demo.
+    api_token: str = Field(
+        default="",
+        description="Shared secret for /upload and /chat. Empty = public demo.",
+    )
+    # Per-visitor rate limit on /chat, in requests per minute. The web app
+    # tracks an in-memory sliding window keyed by the visitor's IP (or the
+    # value of ``X-Forwarded-For`` when running behind a proxy). 0 disables.
+    rate_limit_per_min: int = Field(
+        default=20,
+        ge=0,
+        le=10000,
+        description="Per-visitor chat rate limit (req/min). 0 disables.",
+    )
+    # Per-request cap on streamed tokens. The cross-encoder + re-ranker keep
+    # generation grounded, but a misbehaving prompt could otherwise ask the
+    # model to print 30k tokens. 1500 covers a detailed answer in 1-2 paragraphs.
+    max_answer_tokens: int = Field(
+        default=1500,
+        ge=64,
+        le=4096,
+        description="Max tokens streamed per chat answer.",
+    )
+    # Background summarization after upload is expensive (one extra LLM pass).
+    # In a public demo we skip it and only show it when an admin token is used.
+    summarize_on_upload: bool = Field(
+        default=True,
+        description="Generate an auto-summary after upload (skipped in public demo).",
     )
 
     @property

@@ -52,8 +52,26 @@ def retrieve(
         metadatas=metadatas,
         top_k=settings.top_k_rerank,
     )
-    context = "\n\n".join(chunk.text for chunk in ranked)
-    return RetrievalResult(context=context, chunks=ranked)
+    # The cross-encoder selects the most relevant chunks, but returns them in
+    # relevance order. Reading them in *document* order (by page, then position
+    # on the page) lets the model answer sequential questions — a table of
+    # contents, numbered steps — in the document's own order instead of
+    # jumbling them. Selection stays relevance-based; only presentation order
+    # changes, for both the LLM context and the UI citations.
+    ordered = sorted(ranked, key=_document_order)
+    context = "\n\n".join(chunk.text for chunk in ordered)
+    return RetrievalResult(context=context, chunks=ordered)
+
+
+def _document_order(chunk: RankedChunk) -> tuple[int, int]:
+    """Sort key placing a chunk at its natural position in the source document."""
+    meta = chunk.metadata or {}
+    page = meta.get("page")
+    index = meta.get("chunk_index")
+    return (
+        page if isinstance(page, int) else 0,
+        index if isinstance(index, int) else 0,
+    )
 
 
 def answer(

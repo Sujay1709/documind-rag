@@ -28,7 +28,9 @@ SYSTEM_PROMPT = (
     "don't stop at the first point if more is available. Synthesize across all "
     "provided passages rather than quoting a single fragment.\n"
     "6. Structure the answer for clarity: a direct answer first, then supporting "
-    "details as short paragraphs or bullet points when there are multiple parts.\n"
+    "details as short paragraphs or bullet points when there are multiple parts. "
+    "When the answer is a sequence — a table of contents, chapters, or steps — "
+    "preserve the document's original order.\n"
     "7. Cite the source file and page for the facts you use. Do not invent facts, "
     "sources, or page numbers."
 )
@@ -60,6 +62,13 @@ def stream_chat(messages: list[dict]) -> Iterator[str]:
     """Stream a chat completion token-by-token for arbitrary messages.
 
     Shared by answer generation and document summarization.
+
+    The ``options`` are explicit on purpose. Ollama otherwise falls back to the
+    model's default context window (often 2048 tokens) and silently truncates
+    anything beyond it — which dropped retrieved chunks mid-prompt and produced
+    "half" answers on large documents. ``num_ctx`` sizes the input window,
+    ``num_predict`` caps the output, and a low ``temperature`` keeps grounded
+    answers factual.
     """
     settings = get_settings()
     client = ollama.Client(host=settings.ollama_base_url)
@@ -67,6 +76,11 @@ def stream_chat(messages: list[dict]) -> Iterator[str]:
         model=settings.chat_model,
         stream=True,
         messages=messages,
+        options={
+            "num_ctx": settings.num_ctx,
+            "num_predict": settings.max_output_tokens,
+            "temperature": settings.temperature,
+        },
     )
     for chunk in response:
         content = chunk.get("message", {}).get("content")

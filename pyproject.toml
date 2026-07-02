@@ -23,6 +23,9 @@ dependencies = [
     "ollama>=0.3",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
+    "uvicorn>=0.30",
+    "starlette>=0.36",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
@@ -34,6 +37,7 @@ dev = [
 [project.scripts]
 documind = "documind.app:main"
 documind-eval = "documind.evaluate:main"
+documind-web = "documind.webapp:main"
 
 [project.urls]
 Homepage = "https://github.com/Sujay1709/documind-rag"

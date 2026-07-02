@@ -1,0 +1,104 @@
+[
+  {
+    "question": "What are Sujay's technical skills?",
+    "ground_truth": "Python, SQL, machine learning, data analysis, cloud computing, and AI engineering.",
+    "expected_sources": [
+      "Sujay_Resume_AIEngineer_1_pdf"
+    ],
+    "expected_keywords": [
+      "Python",
+      "machine learning"
+    ]
+  },
+  {
+    "question": "What is Sujay's education?",
+    "ground_truth": "Sujay's education appears on his resume, including a Master's program relevant to data science or AI.",
+    "expected_sources": [
+      "Sujay_Resume_AIEngineer_1_pdf"
+    ],
+    "expected_keywords": [
+      "education",
+      "Master"
+    ]
+  },
+  {
+    "question": "What are the 4D framework components?",
+    "ground_truth": "The 4D framework components are Delegation, Description, Discernment, and Diligence.",
+    "expected_sources": [
+      "1_2_AI_Fluency_Summary_pdf"
+    ],
+    "expected_keywords": [
+      "Delegation",
+      "Description",
+      "Discernment",
+      "Diligence"
+    ]
+  },
+  {
+    "question": "What does the Discernment dimension of the 4D framework mean?",
+    "ground_truth": "Discernment is the ability to evaluate AI outputs critically, recognizing strengths and limitations rather than accepting outputs at face value.",
+    "expected_sources": [
+      "1_2_AI_Fluency_Summary_pdf"
+    ],
+    "expected_keywords": [
+      "Discernment"
+    ]
+  },
+  {
+    "question": "From the cloud computing textbook, what is model serving?",
+    "ground_truth": "Model serving is the deployment of a trained machine learning model behind an API endpoint that accepts inference requests and returns predictions.",
+    "expected_sources": [
+      "cloud_computing_(1)_pdf"
+    ],
+    "expected_keywords": [
+      "model serving",
+      "deployment"
+    ]
+  },
+  {
+    "question": "What are the main sections of the cloud computing textbook?",
+    "ground_truth": "The textbook covers cloud fundamentals, virtualization, containers, orchestration, storage, networking, security, and model deployment.",
+    "expected_sources": [
+      "cloud_computing_(1)_pdf"
+    ],
+    "expected_keywords": [
+      "cloud",
+      "virtualization"
+    ]
+  },
+  {
+    "question": "From the cloud computing textbook, list the main stages of the ML model deployment lifecycle.",
+    "ground_truth": "The textbook describes a model deployment lifecycle that typically includes model training, packaging the model, deploying it to a serving environment, exposing it via an API endpoint, monitoring inference traffic, and retraining or updating the model as data drifts.",
+    "expected_sources": [
+      "cloud_computing_(1)_pdf"
+    ],
+    "expected_keywords": [
+      "training",
+      "deployment",
+      "API",
+      "monitoring"
+    ]
+  },
+  {
+    "question": "What columns in the dataset have more than 50% missing values?",
+    "ground_truth": "The Cabin column has more than 50% missing values and should be dropped before modelling.",
+    "expected_sources": [
+      "eda_report_final_pdf"
+    ],
+    "expected_keywords": [
+      "Cabin",
+      "missing"
+    ]
+  },
+  {
+    "question": "Which columns need one-hot encoding before modelling, per the EDA report?",
+    "ground_truth": "Sex and Embarked need one-hot encoding before modelling.",
+    "expected_sources": [
+      "eda_report_final_pdf"
+    ],
+    "expected_keywords": [
+      "Sex",
+      "Embarked"
+    ]
+  }
+]
