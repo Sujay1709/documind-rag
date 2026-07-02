@@ -48,7 +48,10 @@ SUGGESTED_QUESTIONS = [
 # --------------------------------------------------------------------------- #
 CSS = """
 <style>
-:root {
+/* Two CSS palettes live in :root.light and :root.dark. The page <html> gets
+   the matching class via a small inline script (see _render_theme) so the
+   user can flip themes without a full Streamlit rerun. */
+:root.light {
   --dm-bg: #CDBC97;
   --dm-card: #FBF7EC;
   --dm-card-2: #EFE7D6;
@@ -57,23 +60,39 @@ CSS = """
   --dm-accent-2: #B07F4A;
   --dm-text: #2A2620;
   --dm-muted: #6B5F49;
+  --dm-bar-grad: linear-gradient(180deg, #FBF6EA 0%, #F3EBD9 100%);
+  --dm-bar-shadow: 0 2px 10px rgba(120,90,50,0.06);
+  --dm-bg-veil: rgba(255,255,255,0.18);
+  --dm-bubble-soft: var(--dm-card);
 }
-/* Generous top padding so the brand bar clears Streamlit's fixed header
-   instead of being clipped ("bleeding") at the top of the page. */
-.block-container { padding-top: 3.25rem; max-width: 1040px; }
-/* Keep the translucent header from overlapping the first row of content. */
-[data-testid="stHeader"] { background: transparent; }
+:root.dark {
+  /* Sporty deep-navy palette: cool, elevated, "garage at night". */
+  --dm-bg: #050A18;
+  --dm-card: #0E1A33;
+  --dm-card-2: #142447;
+  --dm-border: rgba(120,170,255,0.18);
+  --dm-accent: #4FA3FF;
+  --dm-accent-2: #2C7BE0;
+  --dm-text: #E6EEF8;
+  --dm-muted: #8FA6C4;
+  --dm-bar-grad: linear-gradient(180deg, #0B142A 0%, #0A1A36 100%);
+  --dm-bar-shadow: 0 4px 24px rgba(0,16,48,0.55);
+  --dm-bg-veil: rgba(0,8,24,0.55);
+  --dm-bubble-soft: #0F1E3D;
+}
 
-/* Hide the default sidebar/collapse chrome — the top bar replaces it */
+/* Generous top padding so the brand bar clears Streamlit's fixed header. */
+.block-container { padding-top: 3.25rem; max-width: 1040px; position: relative; z-index: 1; }
+[data-testid="stHeader"] { background: transparent; }
 [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none; }
 
 /* Minimalist top bar */
 .dm-bar {
   display:flex; align-items:center; gap:10px;
-  background: linear-gradient(180deg, #FBF6EA 0%, #F3EBD9 100%);
+  background: var(--dm-bar-grad);
   border:1px solid var(--dm-border); border-radius:14px;
   padding:10px 16px; margin-bottom:14px;
-  box-shadow:0 2px 10px rgba(120,90,50,0.06);
+  box-shadow: var(--dm-bar-shadow);
   animation: dmFade .4s ease both;
 }
 @keyframes dmFade { from {opacity:0; transform:translateY(-6px);} to {opacity:1; transform:none;} }
@@ -81,6 +100,52 @@ CSS = """
   font-size:1.05rem; background:linear-gradient(135deg,var(--dm-accent),var(--dm-accent-2)); }
 .dm-bar .name { font-weight:800; font-size:1.12rem; color:var(--dm-text); letter-spacing:-0.01em; }
 .dm-bar .tag { color:var(--dm-muted); font-size:0.78rem; margin-left:2px; }
+
+/* Theme pill on the right of the brand bar (mirrors the toggle button). */
+.dm-theme {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; color: var(--dm-muted);
+  padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--dm-border);
+  background: var(--dm-card-2);
+}
+.dm-theme:hover { color: var(--dm-accent); }
+
+/* ---------- Elevated sporty-blue background (page-wide) ---------- */
+/* Built from three layers, top to bottom:
+   1) a soft blue radial glow at top-centre (the "elevated" highlight),
+   2) a second blue radial in the lower-right (ties the composition),
+   3) a deep navy-to-black linear gradient (the "garage" base). */
+.stApp {
+  background:
+    radial-gradient(1200px 600px at 50% 0%, rgba(79,163,255,0.30) 0%, rgba(79,163,255,0) 60%),
+    radial-gradient(900px 500px at 85% 90%, rgba(44,123,224,0.22) 0%, rgba(44,123,224,0) 65%),
+    linear-gradient(180deg, #0A1A36 0%, #050A18 60%, #02060F 100%) !important;
+}
+/* In light mode the same shapes dial back to a subtle warm glow so the
+   toasted-tan page still feels like the original. */
+:root.light .stApp {
+  background:
+    radial-gradient(1100px 540px at 50% -10%, rgba(79,163,255,0.20) 0%, rgba(79,163,255,0) 60%),
+    radial-gradient(900px 500px at 90% 95%, rgba(44,123,224,0.14) 0%, rgba(44,123,224,0) 70%),
+    linear-gradient(180deg, #CDBC97 0%, #C2B186 100%) !important;
+}
+
+/* Veil dims the lighting so foreground stays readable. Stronger in dark
+   mode so the navy "garage" feels moody. */
+.stApp::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: var(--dm-bg-veil);
+  pointer-events: none;
+  z-index: 0;
+  transition: background .35s ease;
+}
+
+/* Streamlit's own containers stay transparent so the painted background
+   shines through. */
+.main, [data-testid="stAppViewContainer"] { background: transparent !important; }
 
 /* Slide-down document-history list (rendered inside a popover) */
 .dm-drop-head { font-weight:800; color:var(--dm-text); margin:0 0 2px 0; font-size:0.95rem; }
@@ -96,8 +161,9 @@ CSS = """
 
 /* Chat bubbles */
 [data-testid="stChatMessage"] {
-  background: var(--dm-card); border:1px solid var(--dm-border);
+  background: var(--dm-bubble-soft); border:1px solid var(--dm-border);
   border-radius:16px; padding:6px 12px; margin-bottom:6px;
+  color: var(--dm-text);
 }
 
 /* History detail card */
@@ -116,25 +182,57 @@ CSS = """
 /* Section heading */
 .dm-suggest-label { color:var(--dm-muted); font-size:0.85rem; margin: 6px 0 2px 0; }
 
-/* Highlight the (+) attach control built into the chat-input toolbar so it
-   reads as an upload affordance rather than blending into the input border. */
-[data-testid="stChatInput"] { border:1px solid var(--dm-border); }
+/* Highlight the (+) attach control built into the chat-input toolbar. */
+[data-testid="stChatInput"] { border:1px solid var(--dm-border); background: var(--dm-card); }
 [data-testid="stChatInputSubmitButton"],
 [data-testid="stChatInputFileUploadButton"] { color: var(--dm-accent); }
 [data-testid="stChatInputFileUploadButton"]:hover { color: var(--dm-accent-2); }
+
+/* Theme-aware tweaks so secondary controls don't look out of place in dark. */
+:root.dark  .stButton > button[kind="secondary"] { background: #10204A; color: var(--dm-text); border-color: var(--dm-border); }
+:root.dark  .stButton > button[kind="secondary"]:hover { background: #163066; }
+:root.dark  .stButton > button[kind="primary"] { background: var(--dm-accent); color: #fff; }
+:root.dark  input, :root.dark textarea { background: #0B1733 !important; color: var(--dm-text) !important; }
+:root.dark  [data-testid="stChatInput"] { background: #0B1733 !important; border-color: var(--dm-border) !important; color: var(--dm-text) !important; }
+:root.dark  hr { border-color: var(--dm-border); }
+:root.light .stButton > button[kind="secondary"] { background: var(--dm-card); }
 
 /* Source citation cards */
 .dm-src-head { font-weight:700; color:var(--dm-text); font-size:0.92rem; }
 .dm-src-rel { color:var(--dm-accent); font-weight:700; font-size:0.8rem; }
 </style>
 """
-st.markdown(CSS, unsafe_allow_html=True)
 
 # Session state -------------------------------------------------------------- #
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("selected_history_id", None)
 st.session_state.setdefault("active_doc", None)
 st.session_state.setdefault("pending_prompt", None)
+# Theme toggle: light (default) vs. dark. Dark swaps the CSS palette to a deep
+# navy/sporty-blue scheme and switches the background to an elevated dimmed
+# blue scene.
+st.session_state.setdefault("dark_mode", False)
+
+# Apply the theme class to <html> on first render and whenever the toggle
+# changes. This keeps the palette switch instant without re-running Streamlit.
+_theme = "dark" if st.session_state.dark_mode else "light"
+# st.html sanitizes HTML by default and drops scripts. We need the inline
+# classList code to actually run, so opt into unsafe_allow_javascript. The
+# payload is a hard-coded string (no user input), so the usual safety
+# concerns don't apply here.
+st.html(f"""
+    <script>
+      (function() {{
+        try {{
+          var root = window.parent.document.documentElement;
+          root.classList.remove('light', 'dark');
+          root.classList.add('{_theme}');
+        }} catch (e) {{}}
+      }})();
+    </script>
+    """,
+    unsafe_allow_javascript=True,
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -459,14 +557,25 @@ def _actions_popover() -> None:
 
 
 def _topbar(sources, hist) -> None:
+    is_dark = st.session_state.dark_mode
+    # The chip on the right of the bar doubles as a quick visual cue
+    # (moon = dark, sun = light) so the user can tell which mode is active.
+    theme_label = "🌙 Dark" if not is_dark else "☀️ Light"
     st.markdown(
-        """<div class="dm-bar"><div class="logo">📄</div>
+        f"""<div class="dm-bar"><div class="logo">📄</div>
         <div class="name">DocuMind</div>
-        <div class="tag">· private PDF research, on your machine</div></div>""",
+        <div class="tag">· private PDF research, on your machine</div>
+        <div class="dm-theme" id="dm-theme-pill">{theme_label}</div></div>""",
         unsafe_allow_html=True,
     )
     # Brand sits in its own row above; the controls line up beneath it.
-    c1, c2, c3, c4 = st.columns([1.2, 1.6, 1.2, 0.6])
+    # A leading 0.8-wide column holds the actual theme toggle button so the
+    # visual chip and the clickable control stay aligned.
+    c0, c1, c2, c3, c4 = st.columns([0.8, 1.2, 1.6, 1.2, 0.6])
+    with c0:
+        if st.button(theme_label, key="dm_theme_toggle", use_container_width=True):
+            st.session_state.dark_mode = not st.session_state.dark_mode
+            st.rerun()
     with c1:
         _upload_popover()
     with c2:

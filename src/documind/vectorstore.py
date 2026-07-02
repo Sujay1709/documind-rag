@@ -38,19 +38,35 @@ def _build_collection() -> chromadb.Collection:
     from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 
     settings = get_settings()
+    # Strip the legacy /api/embeddings suffix. chromadb's OllamaEmbeddingFunction
+    # already does this internally, but doing it here too keeps the wiring
+    # self-documenting and avoids a 404 from the underlying ollama client
+    # when the suffix is on a *host* rather than a path.
+    ef_url = settings.ollama_base_url
     embedding_fn = OllamaEmbeddingFunction(
-        url=settings.ollama_embeddings_url,
+        url=ef_url,
         model_name=settings.embedding_model,
     )
     client = chromadb.PersistentClient(
         path=str(_persist_path(settings)),
         settings=ChromaSettings(anonymized_telemetry=False),
     )
-    return client.get_or_create_collection(
-        name=settings.collection_name,
-        embedding_function=cast(EmbeddingFunction[Embeddable], embedding_fn),
-        metadata={"hnsw:space": "cosine"},
-    )
+    # ``get_or_create_collection`` only honours ``embedding_function`` on first
+    # creation; on subsequent calls it returns the existing collection with
+    # whatever EF it was first built with (often chromadb's default MiniLM,
+    # which then silently takes over at query time and 404s our Ollama calls).
+    # We always pin our configured EF onto the live collection so retrieval
+    # uses the embedding model the user asked for.
+    try:
+        collection = client.get_collection(name=settings.collection_name)
+        collection._embedding_function = cast(EmbeddingFunction[Embeddable], embedding_fn)
+    except Exception:
+        collection = client.create_collection(
+            name=settings.collection_name,
+            embedding_function=cast(EmbeddingFunction[Embeddable], embedding_fn),
+            metadata={"hnsw:space": "cosine"},
+        )
+    return collection
 
 
 @lru_cache(maxsize=1)
