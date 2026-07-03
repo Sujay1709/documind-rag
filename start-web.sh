@@ -33,6 +33,22 @@ if command -v ollama >/dev/null 2>&1; then
 fi
 
 echo "▶ DocuMind web app on http://${HOST}:${PORT}"
-exec uvicorn documind.webapp:app \
+
+# Prefer the venv's uvicorn so we don't accidentally pick up a system
+# Python with a different site-packages. The venv's bin/ sits at
+# .venv/bin/uvicorn regardless of which Python the user activated.
+VENV_DIR="${VENV_DIR:-$(cd "$(dirname "$0")" && pwd)/.venv}"
+if [ -x "${VENV_DIR}/bin/uvicorn" ]; then
+  UVICORN_BIN="${VENV_DIR}/bin/uvicorn"
+else
+  UVICORN_BIN="$(command -v uvicorn)"
+fi
+if [ -z "${UVICORN_BIN}" ]; then
+  echo "✗ uvicorn not found. Activate the venv with 'source .venv/bin/activate'"
+  echo "  or set VENV_DIR=/path/to/your/venv, then re-run start-web.sh."
+  exit 1
+fi
+echo "  using ${UVICORN_BIN}"
+exec "${UVICORN_BIN}" documind.webapp:app \
   --host "$HOST" --port "$PORT" --workers "$WORKERS" \
   --log-level info
