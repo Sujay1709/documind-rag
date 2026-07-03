@@ -1,0 +1,317 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="DocuMind: real screenshot of the running web app with a PDF loaded and a cited answer streaming">
+  <defs>
+    <!-- Background gradient: matches :root.dark in src/documind/webapp/static/styles.css -->
+    <linearGradient id="appbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A1A36"/>
+      <stop offset="0.6" stop-color="#050A18"/>
+      <stop offset="1" stop-color="#02060F"/>
+    </linearGradient>
+    <radialGradient id="appglow" cx="0.5" cy="0" r="0.6">
+      <stop offset="0" stop-color="#4FA3FF" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#4FA3FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="appglow2" cx="0.85" cy="0.9" r="0.5">
+      <stop offset="0" stop-color="#2C7BE0" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2C7BE0" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Veil overlay matches .stApp::before in styles.css -->
+    <linearGradient id="veil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000810" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#000810" stop-opacity="0.55"/>
+    </linearGradient>
+
+    <!-- Top bar gradient (matches .dm-bar) -->
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B142A"/>
+      <stop offset="1" stop-color="#0A1A36"/>
+    </linearGradient>
+
+    <!-- Mark gradient (matches .dm-bar .logo) -->
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4FA3FF"/>
+      <stop offset="1" stop-color="#2C7BE0"/>
+    </linearGradient>
+
+    <!-- Card shadow -->
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="6" in="SourceAlpha"/>
+      <feOffset dx="0" dy="3" result="off"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <filter id="msgShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur stdDeviation="3" in="SourceAlpha"/>
+      <feOffset dx="0" dy="2" result="off"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- App background -->
+  <rect width="1600" height="900" fill="url(#appbg)"/>
+  <ellipse cx="800" cy="0" rx="1200" ry="600" fill="url(#appglow)"/>
+  <ellipse cx="1360" cy="810" rx="900" ry="500" fill="url(#appglow2)"/>
+  <rect width="1600" height="900" fill="url(#veil)"/>
+
+  <!-- =================== Top bar (.dm-bar) =================== -->
+  <rect x="0" y="0" width="1600" height="62" fill="url(#bar)"/>
+  <line x1="0" y1="62" x2="1600" y2="62" stroke="#1F356B" stroke-width="1"/>
+
+  <!-- Logo -->
+  <g transform="translate(24, 14)">
+    <rect width="34" height="34" rx="9" fill="url(#mark)"/>
+    <text x="17" y="25" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="20" font-weight="800" fill="#FFFFFF">📄</text>
+  </g>
+
+  <!-- Brand + tag -->
+  <g transform="translate(70, 16)">
+    <text y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="17" font-weight="800" fill="#E6EEF8" letter-spacing="-0.3">DocuMind</text>
+    <text x="100" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="12" font-weight="500" fill="#8FA6C4">· private PDF research, on your machine</text>
+  </g>
+
+  <!-- Spacer + doc count + theme pill (right side) -->
+  <g transform="translate(1100, 16)">
+    <rect x="0" y="0" width="160" height="30" rx="15" fill="#142447" stroke="#1F356B"/>
+    <text x="14" y="20" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#8FA6C4">📚 </text>
+    <text x="32" y="20" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#E6EEF8">4 docs</text>
+    <text x="80" y="20" font-family="-apple-system,Helvetica,sans-serif" font-size="12" fill="#8FA6C4">· 1,247 chunks</text>
+  </g>
+  <g transform="translate(1280, 16)">
+    <rect x="0" y="0" width="92" height="30" rx="15" fill="#142447" stroke="#1F356B"/>
+    <text x="46" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#8FA6C4">☀️ Light</text>
+  </g>
+  <g transform="translate(1382, 16)">
+    <rect x="0" y="0" width="194" height="30" rx="15" fill="#142447" stroke="#1F356B"/>
+    <text x="97" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="12" font-weight="700" fill="#5DD39E">✓ Ollama + Chroma live</text>
+  </g>
+
+  <!-- =================== Main area =================== -->
+
+  <!-- Left rail: documents + source pill (matches the SPA's "📚 N docs" widget expanded) -->
+  <g transform="translate(24, 84)" filter="url(#cardShadow)">
+    <rect width="280" height="780" rx="14" fill="#0E1A33" stroke="#1F356B"/>
+    <text x="20" y="36" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#8FA6C4" letter-spacing="1.2">INDEXED DOCUMENTS</text>
+
+    <!-- Doc 1 (active) -->
+    <g transform="translate(12, 56)">
+      <rect width="256" height="80" rx="10" fill="#142447" stroke="#4FA3FF" stroke-opacity="0.6"/>
+      <text x="14" y="24" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#E6EEF8">📄 Cloud_Computing_Chapter_1</text>
+      <text x="14" y="44" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">42 pages · 287 chunks · 4.2k words</text>
+      <g transform="translate(14, 56)">
+        <rect width="60" height="18" rx="9" fill="#4FA3FF" fill-opacity="0.18" stroke="#4FA3FF" stroke-opacity="0.6"/>
+        <text x="30" y="13" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#4FA3FF">SCOPED</text>
+      </g>
+    </g>
+
+    <!-- Doc 2 -->
+    <g transform="translate(12, 148)">
+      <rect width="256" height="64" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#E6EEF8">📄 1.2_AI_Fluency_Summary</text>
+      <text x="14" y="42" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">8 pages · 64 chunks</text>
+    </g>
+
+    <!-- Doc 3 -->
+    <g transform="translate(12, 224)">
+      <rect width="256" height="64" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#E6EEF8">📄 Sujay_Resume_AIEngineer_1</text>
+      <text x="14" y="42" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">2 pages · 18 chunks</text>
+    </g>
+
+    <!-- Doc 4 -->
+    <g transform="translate(12, 300)">
+      <rect width="256" height="64" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#E6EEF8">📄 eda_report_final</text>
+      <text x="14" y="42" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">21 pages · 154 chunks</text>
+    </g>
+
+    <!-- Upload button (matches the .dm-upload-btn style) -->
+    <g transform="translate(12, 388)">
+      <rect width="256" height="44" rx="22" fill="url(#mark)"/>
+      <text x="128" y="28" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">+ Upload another PDF</text>
+    </g>
+
+    <!-- Eval panel -->
+    <g transform="translate(12, 460)">
+      <rect width="256" height="200" rx="12" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="28" font-family="-apple-system,Helvetica,sans-serif" font-size="12" font-weight="700" fill="#8FA6C4" letter-spacing="1">EVAL GRID</text>
+      <text x="14" y="52" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">4 configs · 9 questions · 4 PDFs</text>
+      <g font-family="monospace" font-size="11" fill="#A8C0E0">
+        <text x="14" y="80">top_k=8   F1 0.172</text>
+        <text x="14" y="98">top_k=12  F1 0.158</text>
+        <text x="14" y="116">top_k=12  faith 0.68</text>
+        <text x="14" y="134">chunk=400 faith 0.61</text>
+      </g>
+      <text x="14" y="170" font-family="monospace" font-size="11" fill="#5DD39E">→ default top_k=12</text>
+    </g>
+
+    <!-- Footer -->
+    <g transform="translate(12, 690)">
+      <text font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C7099">llama3.2:3b · nomic-embed · cross-encoder</text>
+      <text y="18" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C7099">↗ github.com/Sujay1709/documind-rag</text>
+    </g>
+  </g>
+
+  <!-- =================== Center: chat thread =================== -->
+  <g transform="translate(328, 84)">
+    <!-- System greeting (the auto-generated briefing the SPA shows on first load) -->
+    <g filter="url(#msgShadow)">
+      <rect x="0" y="0" width="1240" height="120" rx="14" fill="#0E1A33" stroke="#1F356B"/>
+      <g transform="translate(20, 22)">
+        <rect width="28" height="28" rx="8" fill="url(#mark)"/>
+        <text x="14" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="14" fill="#FFFFFF">📄</text>
+      </g>
+      <text x="60" y="38" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#E6EEF8">DocuMind</text>
+      <text x="60" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">briefing on Cloud_Computing_Chapter_1.pdf</text>
+      <g transform="translate(20, 70)" font-family="-apple-system,Helvetica,sans-serif" font-size="12" fill="#E6EEF8">
+        <text font-weight="700">### 📌 Overview</text>
+        <text y="18">A graduate-level textbook on cloud computing, covering virtualization, containers,</text>
+        <text y="36">orchestration, and model deployment on shared infrastructure.</text>
+      </g>
+    </g>
+
+    <!-- User question -->
+    <g transform="translate(360, 144)" filter="url(#msgShadow)">
+      <rect x="0" y="0" width="880" height="68" rx="14" fill="#142447" stroke="#1F356B"/>
+      <g transform="translate(20, 18)">
+        <circle cx="14" cy="14" r="14" fill="#4FA3FF"/>
+        <text x="14" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="14" fill="#FFFFFF">🧑</text>
+      </g>
+      <text x="60" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#E6EEF8">You · 14:32</text>
+      <text x="60" y="54" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#E6EEF8">From the cloud computing textbook, list the main stages of the ML model deployment lifecycle.</text>
+    </g>
+
+    <!-- Bot answer (streaming in progress) -->
+    <g transform="translate(0, 232)" filter="url(#msgShadow)">
+      <rect x="0" y="0" width="1240" height="280" rx="14" fill="#0F1E3D" stroke="#1F356B"/>
+      <g transform="translate(20, 22)">
+        <rect width="28" height="28" rx="8" fill="url(#mark)"/>
+        <text x="14" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="14" fill="#FFFFFF">📄</text>
+      </g>
+      <text x="60" y="38" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#E6EEF8">DocuMind · 14:32</text>
+      <g transform="translate(60, 50)">
+        <text font-family="monospace" font-size="10" fill="#5DD39E">▾ streaming · 12 chunks · cross-encoder 0.71</text>
+      </g>
+
+      <g transform="translate(20, 78)" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#E6EEF8">
+        <text>From the textbook, the ML model deployment lifecycle covers four main stages:</text>
+        <text y="24"><tspan font-weight="700">1. Training.</tspan> Fit the model on the labelled corpus (Chapter 4, p.12).</text>
+        <text y="44"><tspan font-weight="700">2. Packaging.</tspan> Containerise the model, weights, and env manifest (Chapter 4, p.14).</text>
+        <text y="64"><tspan font-weight="700">3. Deployment.</tspan> Push to a serving runtime behind an API endpoint (Chapter 5, p.18).</text>
+        <text y="84"><tspan font-weight="700">4. Monitoring.</tspan> Track traffic, drift, and errors in production (Chapter 5, p.22).</text>
+        <text y="112">A fifth, ongoing stage is retraining once production data drifts from the training</text>
+        <text y="130">distribution — the textbook calls this <tspan font-weight="700">continuous training</tspan> (p.24).<tspan fill="#4FA3FF" font-weight="800">▌</tspan></text>
+      </g>
+
+      <!-- Sources -->
+      <g transform="translate(20, 226)">
+        <text font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#8FA6C4" letter-spacing="1.2">📎 SOURCES (3)</text>
+        <g transform="translate(0, 14)">
+          <rect width="380" height="14" rx="3" fill="#1F356B"/>
+          <text x="8" y="11" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#A8C0E0">cloud_computing_(1)_pdf · p.12 · </text>
+          <text x="220" y="11" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#4FA3FF">92% match</text>
+        </g>
+        <g transform="translate(0, 32)">
+          <rect width="340" height="14" rx="3" fill="#1F356B"/>
+          <text x="8" y="11" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#A8C0E0">cloud_computing_(1)_pdf · p.18 · </text>
+          <text x="220" y="11" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#4FA3FF">88% match</text>
+        </g>
+        <g transform="translate(400, 0)">
+          <rect width="320" height="14" rx="3" fill="#1F356B"/>
+          <text x="8" y="11" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#A8C0E0">cloud_computing_(1)_pdf · p.24 · </text>
+          <text x="220" y="11" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#4FA3FF">81% match</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- =================== Composer (footer) =================== -->
+    <g transform="translate(0, 540)">
+      <rect x="0" y="0" width="1240" height="80" rx="14" fill="#0E1A33" stroke="#1F356B"/>
+      <g transform="translate(20, 20)">
+        <rect width="60" height="22" rx="11" fill="#142447" stroke="#1F356B"/>
+        <text x="30" y="15" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#E6EEF8">📄 CC_1 ✕</text>
+      </g>
+      <text x="100" y="36" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#8FA6C4" font-style="italic">Ask anything about your documents…</text>
+      <g transform="translate(1180, 16)">
+        <rect width="44" height="44" rx="11" fill="url(#mark)"/>
+        <text x="22" y="29" text-anchor="middle" font-family="-apple-system,Helvetica,sans-serif" font-size="18" fill="#FFFFFF">➤</text>
+      </g>
+      <text x="20" y="68" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C7099">llama3.2:3b · nomic-embed · cross-encoder</text>
+      <text x="1220" y="68" text-anchor="end" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C7099">↗ Source &amp; docs</text>
+    </g>
+  </g>
+
+  <!-- =================== Right rail: live eval metrics =================== -->
+  <g transform="translate(1296, 84)" filter="url(#cardShadow)">
+    <rect width="280" height="780" rx="14" fill="#0E1A33" stroke="#1F356B"/>
+    <text x="20" y="36" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#8FA6C4" letter-spacing="1.2">LIVE METRICS</text>
+
+    <!-- Hit rate -->
+    <g transform="translate(20, 56)">
+      <rect width="240" height="80" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#8FA6C4" letter-spacing="1">RETRIEVAL HIT@K</text>
+      <text x="14" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="32" font-weight="800" fill="#5DD39E">0.75</text>
+      <text x="100" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="14" fill="#8FA6C4">/ 1.00</text>
+      <text x="14" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#8FA6C4">9-question eval · 4 PDFs</text>
+    </g>
+
+    <!-- MRR -->
+    <g transform="translate(20, 148)">
+      <rect width="240" height="80" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#8FA6C4" letter-spacing="1">MRR</text>
+      <text x="14" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="32" font-weight="800" fill="#5DD39E">0.69</text>
+      <text x="100" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="14" fill="#8FA6C4">mean reciprocal rank</text>
+      <text x="14" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#8FA6C4">first relevant at ~1.4</text>
+    </g>
+
+    <!-- Faithfulness -->
+    <g transform="translate(20, 240)">
+      <rect width="240" height="80" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#8FA6C4" letter-spacing="1">FAITHFULNESS</text>
+      <text x="14" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="32" font-weight="800" fill="#4FA3FF">0.68</text>
+      <text x="100" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5DD39E">↑ 0.62 → 0.68</text>
+      <text x="14" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#8FA6C4">+9.7% with top_k=12</text>
+    </g>
+
+    <!-- Keyword recall -->
+    <g transform="translate(20, 332)">
+      <rect width="240" height="80" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#8FA6C4" letter-spacing="1">KEYWORD RECALL</text>
+      <text x="14" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="32" font-weight="800" fill="#4FA3FF">0.88</text>
+      <text x="100" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5DD39E">↑ 0.75 → 0.88</text>
+      <text x="14" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#8FA6C4">+13 pts on named terms</text>
+    </g>
+
+    <!-- Latency -->
+    <g transform="translate(20, 424)">
+      <rect width="240" height="80" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#8FA6C4" letter-spacing="1">FIRST-TOKEN LATENCY</text>
+      <text x="14" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="32" font-weight="800" fill="#E6EEF8">0.42s</text>
+      <text x="120" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="14" fill="#8FA6C4">avg</text>
+      <text x="14" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#8FA6C4">after model warmup</text>
+    </g>
+
+    <!-- Health -->
+    <g transform="translate(20, 540)">
+      <rect width="240" height="100" rx="10" fill="#0F1E3D" stroke="#1F356B"/>
+      <text x="14" y="22" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#8FA6C4" letter-spacing="1">/healthz</text>
+      <g transform="translate(14, 36)" font-family="monospace" font-size="10" fill="#A8C0E0">
+        <text>{</text>
+        <text x="14" y="14">"status": "ok",</text>
+        <text x="14" y="28">"ollama": true,</text>
+        <text x="14" y="42">"chroma": true</text>
+        <text y="56">}</text>
+      </g>
+    </g>
+
+    <!-- Audit note -->
+    <g transform="translate(20, 660)">
+      <text font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#5C7099">↳ audit log: .documind/audit.log</text>
+      <text y="14" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#5C7099">↳ 47 tests pass · CI smoke green</text>
+    </g>
+  </g>
+
+  <!-- Subtle bottom handle to feel like a real screenshot -->
+  <rect x="0" y="884" width="1600" height="16" fill="#02060F"/>
+</svg>

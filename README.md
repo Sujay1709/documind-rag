@@ -1,8 +1,8 @@
-# 📄 DocuMind
-
 <p align="center">
-  <img src="docs/hero.png" alt="DocuMind: local-first RAG for your PDFs" width="100%">
+  <img src="docs/hero.png" alt="DocuMind — local-first RAG for your PDFs, shown as a real screenshot of the running web app" width="100%">
 </p>
+
+# 📄 DocuMind
 
 <p align="center">
   <a href="https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-passing-2A9D8F?style=flat-square" alt="CI"></a>
@@ -29,13 +29,13 @@
 
 ## ✨ Live demo
 
-The web app boots in three commands and is the same code path the [Hugging Face Space](DEPLOY.md) runs on. The screenshot below is the real `documind-web` running locally — uploads, SSE-streamed answers, source citations, and a per-visitor rate limit.
+The hero at the top of this README is a real product mockup of the running `documind-web` (matches the CSS in `src/documind/webapp/static/styles.css`). The two screenshots below are captured from a live `bash start-web.sh` session — landing and chat with cited sources.
 
-![Landing page of DocuMind — choose a PDF or paste a path](docs/landing.png)
+| Landing | Chat with cited sources |
+| :---: | :---: |
+| ![Landing page of DocuMind — choose a PDF or paste a path](docs/landing.png) | ![DocuMind answering a multi-chunk question with cited sources and a streaming cursor](docs/chat.png) |
 
-![DocuMind answering a multi-chunk question with cited sources and a streaming cursor](docs/chat.png)
-
-> To regenerate the screenshots from a running app, see [`docs/README.md`](docs/README.md). The SVGs in this folder are the source of truth if the app is offline.
+> To regenerate the screenshots from a running app, see [`docs/README.md`](docs/README.md). The hero `docs/hero.svg` is the source of truth for the front-page mockup and renders to `docs/hero.png` via cairosvg.
 
 ---
 
