@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 720" role="img" aria-label="DocuMind one-command demo: from clone to public URL in three steps">
+  <defs>
+    <linearGradient id="tbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B0F1A"/>
+      <stop offset="1" stop-color="#050810"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="720" fill="url(#tbg)"/>
+  <rect x="0" y="0" width="1600" height="40" fill="#1A1F2E"/>
+  <circle cx="22" cy="20" r="6" fill="#FF5F57"/>
+  <circle cx="44" cy="20" r="6" fill="#FEBC2E"/>
+  <circle cx="66" cy="20" r="6" fill="#28C840"/>
+  <text x="800" y="25" text-anchor="middle" font-family="-apple-system,Menlo,monospace" font-size="12" fill="#8FA6C4">sujaygopal — zsh — 132×40</text>
+
+  <!-- Body -->
+  <g font-family="Menlo,'SF Mono',monospace" font-size="14">
+    <!-- Comment block -->
+    <text x="40" y="80" fill="#5DD39E"># clone, install, run — three commands, one URL</text>
+    <text x="40" y="110" fill="#A8C0E0">$ </text>
+    <text x="68" y="110" fill="#E6EEF8">git clone https://github.com/Sujay1709/documind-rag.git</text>
+    <text x="40" y="132" fill="#5C7099">  Cloning into 'documind-rag'...</text>
+    <text x="40" y="152" fill="#5C7099">  Resolving deltas: 100% (47/47), done.</text>
+
+    <text x="40" y="194" fill="#A8C0E0">$ </text>
+    <text x="68" y="194" fill="#E6EEF8">cd documind-rag &amp;&amp; pip install -e ".[dev]"</text>
+    <text x="40" y="216" fill="#5C7099">  Obtaining file://.</text>
+    <text x="40" y="236" fill="#5C7099">  Successfully installed documind-0.1.0 pydantic-2.13.4 ...</text>
+
+    <text x="40" y="278" fill="#A8C0E0">$ </text>
+    <text x="68" y="278" fill="#E6EEF8">bash start-web.sh</text>
+    <text x="40" y="300" fill="#5C7099">  ▶ Starting Ollama server…</text>
+    <text x="40" y="320" fill="#5C7099">  ▶ Pulling llama3.2:3b...</text>
+    <text x="40" y="340" fill="#5C7099">  ▶ Pulling nomic-embed-text...</text>
+    <text x="40" y="360" fill="#5DD39E">  ✓ Ollama is up.</text>
+    <text x="40" y="380" fill="#5DD39E">  ✓ DocuMind web app on http://0.0.0.0:8000</text>
+    <text x="40" y="400" fill="#5C7099">  INFO:     Uvicorn running on http://0.0.0.0:8000</text>
+
+    <text x="40" y="442" fill="#A8C0E0">$ </text>
+    <text x="68" y="442" fill="#E6EEF8">curl http://127.0.0.1:8000/healthz | jq .</text>
+    <text x="40" y="464" fill="#5DD39E">{</text>
+    <text x="60" y="484" fill="#5DD39E">  "status": "ok",</text>
+    <text x="60" y="504" fill="#5DD39E">  "ollama": true,</text>
+    <text x="60" y="524" fill="#5DD39E">  "chroma": true,</text>
+    <text x="60" y="544" fill="#5DD39E">  "models": {</text>
+    <text x="80" y="564" fill="#5DD39E">"chat": "llama3.2:3b",</text>
+    <text x="80" y="584" fill="#5DD39E">"embedding": "nomic-embed-text:latest",</text>
+    <text x="80" y="604" fill="#5DD39E">"reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2"</text>
+    <text x="60" y="624" fill="#5DD39E">  }</text>
+    <text x="40" y="644" fill="#5DD39E">}</text>
+
+    <!-- Prompt at end -->
+    <text x="40" y="688" fill="#A8C0E0">$ </text>
+    <rect x="68" y="676" width="10" height="18" fill="#E6EEF8"/>
+  </g>
+</svg>

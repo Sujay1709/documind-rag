@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" role="img" aria-label="DocuMind architecture: PDF to streamed cited answer">
+  <defs>
+    <linearGradient id="abg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF6EA"/>
+      <stop offset="1" stop-color="#EFE7D6"/>
+    </linearGradient>
+    <linearGradient id="aintake" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF7EC"/>
+      <stop offset="1" stop-color="#EFE7D6"/>
+    </linearGradient>
+    <linearGradient id="aproc" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E1ECF7"/>
+      <stop offset="1" stop-color="#C7DAF0"/>
+    </linearGradient>
+    <linearGradient id="aretr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCE4CC"/>
+      <stop offset="1" stop-color="#F3C794"/>
+    </linearGradient>
+    <linearGradient id="agener" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D7E9D9"/>
+      <stop offset="1" stop-color="#A6CFA9"/>
+    </linearGradient>
+    <filter id="ds" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" in="SourceAlpha"/>
+      <feOffset dx="0" dy="3" result="off"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.35"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5B4A2C"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="760" fill="url(#abg)"/>
+
+  <!-- Title -->
+  <g transform="translate(60, 50)">
+    <text font-family="-apple-system,Helvetica,sans-serif" font-size="32" font-weight="800" fill="#2A2620">How a question becomes a cited answer</text>
+    <text y="30" font-family="-apple-system,Helvetica,sans-serif" font-size="15" font-weight="500" fill="#6B5F49">Same pipeline across the Streamlit UI and the public web app — only the transport differs.</text>
+  </g>
+
+  <!-- Phase labels (top of each column) -->
+  <g font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#6B5F49" letter-spacing="1.5">
+    <text x="180" y="140">INGEST</text>
+    <text x="500" y="140">EMBED + INDEX</text>
+    <text x="820" y="140">RETRIEVE + RE-RANK</text>
+    <text x="1140" y="140">GENERATE</text>
+    <text x="1380" y="140" text-anchor="end">DELIVER</text>
+  </g>
+
+  <!-- COLUMN 1: PDF upload -->
+  <g transform="translate(60, 170)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#aintake)" stroke="#D4C3A0"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#2A2620">PDF upload</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#6B5F49">Streamlit /upload  or</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#6B5F49">web app /api/upload-by-path</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#8A5A33">500 MB · 1000-char chunks · 200 overlap</text>
+  </g>
+
+  <g transform="translate(60, 290)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#aintake)" stroke="#D4C3A0"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#2A2620">PyMuPDF loader</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#6B5F49">Per-page Document objects,</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#6B5F49">whitespace cleaned, page tagged</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#8A5A33">ingestion.py</text>
+  </g>
+
+  <g transform="translate(60, 410)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#aintake)" stroke="#D4C3A0"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#2A2620">Recursive splitter</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#6B5F49">Sentences first, then words.</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#6B5F49">~150 chunks for a 50-page PDF.</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#8A5A33">langchain-text-splitters</text>
+  </g>
+
+  <!-- COLUMN 2: embed + index -->
+  <g transform="translate(380, 170)" filter="url(#ds)">
+    <rect width="240" height="160" rx="14" fill="url(#aproc)" stroke="#9AB5D5"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#1A2C5C">Ollama embeddings</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1A2C5C">nomic-embed-text</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1A2C5C">768-dim · cosine</text>
+    <text x="20" y="100" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#1A2C5C">Batched upsert</text>
+    <text x="20" y="118" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#1A2C5C">128 chunks / batch → 1000s of</text>
+    <text x="20" y="132" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#1A2C5C">chunks for big PDFs, no OOM</text>
+    <text x="20" y="150" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#1A2C5C">vectorstore.py</text>
+  </g>
+
+  <g transform="translate(380, 350)" filter="url(#ds)">
+    <rect width="240" height="160" rx="14" fill="url(#aproc)" stroke="#9AB5D5"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#1A2C5C">ChromaDB</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1A2C5C">PersistentClient on disk.</text>
+    <text x="20" y="78" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#1A2C5C">Source-tagged ids</text>
+    <text x="20" y="96" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#1A2C5C">{source}_{idx} → re-upload</text>
+    <text x="20" y="110" font-family="-apple-system,Helvetica,sans-serif" font-size="10" fill="#1A2C5C">updates rather than duplicates</text>
+    <text x="20" y="138" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#1A2C5C">.documind/chroma</text>
+  </g>
+
+  <!-- COLUMN 3: retrieve + re-rank -->
+  <g transform="translate(700, 170)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#aretr)" stroke="#D5A26C"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#5C3A12">Vector search</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C3A12">Top-30 candidates by</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C3A12">cosine similarity</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#5C3A12">wide recall first</text>
+  </g>
+
+  <g transform="translate(700, 290)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#aretr)" stroke="#D5A26C"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#5C3A12">Cross-encoder</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C3A12">ms-marco-MiniLM-L-6-v2</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C3A12">re-ranks (query, chunk) pairs</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#5C3A12">top 12 by relevance (default)</text>
+  </g>
+
+  <g transform="translate(700, 410)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#aretr)" stroke="#D5A26C"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#5C3A12">Document-order sort</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C3A12">Selected by relevance,</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C3A12">presented by page order</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#5C3A12">step lists stay in order</text>
+  </g>
+
+  <!-- COLUMN 4: generate -->
+  <g transform="translate(1020, 170)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#agener)" stroke="#82B585"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#1F3F22">System prompt</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1F3F22">Answer only from context.</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1F3F22">Refuse "ignore previous".</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#1F3F22">prompt-injection resistant</text>
+  </g>
+
+  <g transform="translate(1020, 290)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#agener)" stroke="#82B585"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#1F3F22">Context builder</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1F3F22">&lt;&lt;&lt;CONTEXT ... CONTEXT&gt;&gt;&gt;</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1F3F22">explicitly labelled untrusted</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#1F3F22">8192 ctx · temperature 0.2</text>
+  </g>
+
+  <g transform="translate(1020, 410)" filter="url(#ds)">
+    <rect width="240" height="100" rx="14" fill="url(#agener)" stroke="#82B585"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#1F3F22">Ollama chat</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1F3F22">llama3.2:3b · streamed</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1F3F22">token-by-token (SSE)</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#1F3F22">1500-char answer cap</text>
+  </g>
+
+  <!-- COLUMN 5: deliver -->
+  <g transform="translate(1340, 170)" filter="url(#ds)">
+    <rect width="200" height="100" rx="14" fill="#0E1A33" stroke="#4FA3FF" stroke-opacity="0.5"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#E6EEF8">Streamlit UI</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">st.rerun on every input</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">local single-user</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#4FA3FF">:8501</text>
+  </g>
+
+  <g transform="translate(1340, 290)" filter="url(#ds)">
+    <rect width="200" height="100" rx="14" fill="#0E1A33" stroke="#4FA3FF" stroke-opacity="0.5"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#E6EEF8">documind-web</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">Starlette + uvicorn</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">/chat SSE, /api/chat JSON</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#4FA3FF">:8000 · HF Spaces</text>
+  </g>
+
+  <g transform="translate(1340, 410)" filter="url(#ds)">
+    <rect width="200" height="100" rx="14" fill="#0E1A33" stroke="#4FA3FF" stroke-opacity="0.5"/>
+    <text x="20" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#E6EEF8">Public Space</text>
+    <text x="20" y="56" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">huggingface.co/spaces/</text>
+    <text x="20" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#8FA6C4">Sujay1709/documind</text>
+    <text x="20" y="90" font-family="-apple-system,Helvetica,sans-serif" font-size="10" font-style="italic" fill="#4FA3FF">DEPLOY.md</text>
+  </g>
+
+  <!-- Arrows between columns -->
+  <g stroke="#5B4A2C" stroke-width="2.5" fill="none" marker-end="url(#arr)">
+    <line x1="300" y1="220" x2="380" y2="240"/>
+    <line x1="620" y1="240" x2="700" y2="220"/>
+    <line x1="940" y1="220" x2="1020" y2="220"/>
+    <line x1="1260" y1="220" x2="1340" y2="220"/>
+  </g>
+
+  <!-- Footnote -->
+  <g transform="translate(60, 690)">
+    <text font-family="-apple-system,Helvetica,sans-serif" font-size="12" fill="#6B5F49">Source: src/documind/{ingestion,vectorstore,reranker,llm,pipeline}.py · 47 tests · python 3.10+ · MIT</text>
+  </g>
+</svg>

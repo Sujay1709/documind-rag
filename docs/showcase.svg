@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 600" role="img" aria-label="DocuMind: defended defaults and a 9-question eval">
+  <defs>
+    <linearGradient id="sbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF6EA"/>
+      <stop offset="1" stop-color="#F2E9D4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="600" fill="url(#sbg)"/>
+
+  <!-- Title -->
+  <g transform="translate(60, 50)">
+    <text font-family="-apple-system,Helvetica,sans-serif" font-size="32" font-weight="800" fill="#2A2620">Defended defaults, not magic numbers</text>
+    <text y="30" font-family="-apple-system,Helvetica,sans-serif" font-size="15" font-weight="500" fill="#6B5F49">Each knob below was chosen by a side-by-side benchmark on a 9-question eval set spanning 4 indexed PDFs. The full grid is in <tspan font-family="monospace" fill="#8A5A33">eval/benchmark.md</tspan>.</text>
+  </g>
+
+  <!-- Card: defended default -->
+  <g transform="translate(60, 130)">
+    <rect width="700" height="420" rx="18" fill="#FFFFFF" stroke="#D4C3A0"/>
+    <text x="24" y="40" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#8A5A33" letter-spacing="1.5">EVAL-EVIDENCED DEFAULT</text>
+    <text x="24" y="86" font-family="-apple-system,Helvetica,sans-serif" font-size="44" font-weight="800" fill="#2A2620">top_k_rerank = 12</text>
+    <text x="24" y="118" font-family="-apple-system,Helvetica,sans-serif" font-size="14" fill="#6B5F49">vs. the previous default of 8 chunks. Same dataset, same metric suite, four-trial grid.</text>
+
+    <!-- Metric callouts -->
+    <g transform="translate(24, 160)">
+      <g>
+        <rect width="200" height="100" rx="12" fill="#F2E9D4" stroke="#D4C3A0"/>
+        <text x="16" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#6B5F49" letter-spacing="1.2">FAITHFULNESS</text>
+        <text x="16" y="74" font-family="-apple-system,Helvetica,sans-serif" font-size="36" font-weight="800" fill="#2A2620">0.62→0.68</text>
+        <text x="16" y="92" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1F6F2C">+9.7% grounded</text>
+      </g>
+      <g transform="translate(216, 0)">
+        <rect width="220" height="100" rx="12" fill="#F2E9D4" stroke="#D4C3A0"/>
+        <text x="16" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#6B5F49" letter-spacing="1.2">KEYWORD RECALL</text>
+        <text x="16" y="74" font-family="-apple-system,Helvetica,sans-serif" font-size="36" font-weight="800" fill="#2A2620">0.75→0.88</text>
+        <text x="16" y="92" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#1F6F2C">+13 pts on named terms</text>
+      </g>
+      <g transform="translate(452, 0)">
+        <rect width="200" height="100" rx="12" fill="#F2E9D4" stroke="#D4C3A0"/>
+        <text x="16" y="34" font-family="-apple-system,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#6B5F49" letter-spacing="1.2">RETRIEVAL</text>
+        <text x="16" y="74" font-family="-apple-system,Helvetica,sans-serif" font-size="36" font-weight="800" fill="#2A2620">0.75 hit@k</text>
+        <text x="16" y="92" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#6B5F49">flat across configs</text>
+      </g>
+    </g>
+
+    <!-- Trail note -->
+    <g transform="translate(24, 290)">
+      <text font-family="-apple-system,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#2A2620">Why this matters</text>
+      <text y="24" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#4A4030">A wider context window lets the model name the 4D framework components,</text>
+      <text y="44" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#4A4030">the Titanic columns, and the textbook stages verbatim. Token-F1 dips a bit</text>
+      <text y="64" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#4A4030">because the 3B model paraphrases — faithfulness and keyword recall are the</text>
+      <text y="84" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#4A4030">honest signals for RAG quality.</text>
+    </g>
+
+    <text x="24" y="400" font-family="monospace" font-size="11" fill="#8A5A33">$ make benchmark    # regenerates eval/benchmark.{json,md}</text>
+  </g>
+
+  <!-- Card: feature matrix -->
+  <g transform="translate(800, 130)">
+    <rect width="740" height="420" rx="18" fill="#FFFFFF" stroke="#D4C3A0"/>
+    <text x="24" y="40" font-family="-apple-system,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#8A5A33" letter-spacing="1.5">PRODUCTION CHECKLIST</text>
+    <text x="24" y="72" font-family="-apple-system,Helvetica,sans-serif" font-size="22" font-weight="800" fill="#2A2620">Built to ship, not to demo</text>
+
+    <g transform="translate(24, 100)" font-family="-apple-system,Helvetica,sans-serif" font-size="13" fill="#2A2620">
+      <g><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">Per-visitor rate limit (20 req/min, X-Forwarded-For aware)</text></g>
+      <g transform="translate(0, 26)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">Optional X-Documind-Token gate on /upload and /chat</text></g>
+      <g transform="translate(0, 52)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">JSON-line audit log at .documind/audit.log</text></g>
+      <g transform="translate(0, 78)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">1500-char answer cap, prompt-injection-resistant system prompt</text></g>
+      <g transform="translate(0, 104)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">Path-traversal guard on /api/upload-by-path</text></g>
+      <g transform="translate(0, 130)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">/healthz 200/503 with Ollama + Chroma probe</text></g>
+      <g transform="translate(0, 156)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">Persistent model + index storage in the HF Space image</text></g>
+      <g transform="translate(0, 182)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">CI smoke test boots uvicorn and hits every route on every PR</text></g>
+      <g transform="translate(0, 208)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">Multi-config benchmark (chunk_size × top_k) for tuning</text></g>
+      <g transform="translate(0, 234)"><circle cx="6" cy="0" r="5" fill="#1F6F2C"/><text x="20" y="4">Ruff lint · 47 pytest cases · deterministic CI</text></g>
+    </g>
+
+    <g transform="translate(24, 370)">
+      <text font-family="monospace" font-size="11" fill="#8A5A33">$ python scripts/smoke_webapp.py    # what CI runs</text>
+    </g>
+  </g>
+</svg>
