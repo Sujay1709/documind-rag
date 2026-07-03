@@ -1,65 +1,103 @@
 # 📄 DocuMind
 
-[![CI](https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Built with Starlette + Streamlit](https://img.shields.io/badge/built%20with-Starlette-FF4B4B.svg)](https://www.starlette.io/)
+<p align="center">
+  <img src="docs/hero.png" alt="DocuMind: local-first RAG for your PDFs" width="100%">
+</p>
 
-**Local, privacy-first RAG assistant — chat with your PDFs entirely on your own machine.**
+<p align="center">
+  <a href="https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-passing-2A9D8F?style=flat-square" alt="CI"></a>
+  <a href="https://github.com/Sujay1709/documind-rag/actions/workflows/smoke.yml"><img src="https://img.shields.io/badge/smoke-passing-2A9D8F?style=flat-square" alt="smoke"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10+-blue?style=flat-square" alt="Python 3.10+"></a>
+  <img src="https://img.shields.io/badge/llama3.2-3B-blueviolet?style=flat-square" alt="llama3.2:3b">
+  <img src="https://img.shields.io/badge/chromadb-persistent-FF6F00?style=flat-square" alt="ChromaDB">
+  <img src="https://img.shields.io/badge/cross--encoder-ms--marco-FF6F00?style=flat-square" alt="cross-encoder">
+  <img src="https://img.shields.io/badge/SSE-streamed-00B4D8?style=flat-square" alt="SSE">
+  <img src="https://img.shields.io/badge/MIT-2A9D8F?style=flat-square" alt="License">
+</p>
 
-DocuMind ingests PDF documents, indexes them in a local vector store, and answers
-your questions with a local LLM. Nothing leaves your computer: embeddings,
-retrieval, re-ranking, and generation all run locally via [Ollama](https://ollama.com)
-and [ChromaDB](https://www.trychroma.com).
+<p align="center">
+  <b>Local, privacy-first RAG assistant for your PDFs.</b><br>
+  Citations on every answer. One command to run. One command to deploy.
+</p>
 
-This is a substantially rebuilt successor to an earlier single-file prototype.
-See [What's new](#whats-new) for the differences.
+<p align="center">
+  <a href="#-live-demo">Live demo</a> · <a href="#-architecture">Architecture</a> · <a href="#-defended-defaults">Defended defaults</a> · <a href="#-quick-start">Quick start</a> · <a href="DEPLOY.md">Deploy</a> · <a href="RESUME.md">Resume kit</a>
+</p>
 
 ---
 
-## Features
+## ✨ Live demo
 
-- **Warm, interactive landing page** (beige theme) with an animated hero, feature
-  cards, a how-it-works strip, clickable example-question chips, and live stat chips.
-- **Live processing feedback** — a step-by-step status (reading → chunking →
-  embedding → summarizing) while a document is indexed.
-- **Auto document briefing** — on processing, the model generates an overview, a
-  table of contents, and key highlights, shown as the opening chat message; each
-  document also displays page/word/chunk stats. Briefings are cached per document.
-- **Large uploads** — PDFs up to **500 MB** per file (configurable).
-- **Hardened, document-only answers** — the model is instructed to answer solely
-  from your uploaded documents, to treat retrieved text as untrusted data (so
-  instructions hidden inside a PDF can't hijack it), and never to reveal its
-  system prompt. Everything runs locally, so no document data leaves your machine.
-- **Chat interface** with conversation history and follow-up questions.
-- **Persistent history store** — every question, answer, and its sources are saved
-  to disk and browsable from the sidebar, surviving app restarts.
-- **Multiple PDFs** indexed at once, with per-document tracking and a "clear" control.
-- **Cross-encoder re-ranking** so the most relevant chunks (not just the most
-  similar embeddings) are sent to the model.
-- **Source citations** — every answer shows the chunks, source file, page, and
-  relevance score it was grounded in.
-- **Streaming answers** rendered token-by-token.
-- **Fully local & private** — uses Ollama for both embeddings and generation.
-- **Configurable** via environment variables (chunk size, models, retrieval depth…).
-- **RAG evaluation harness** — measure retrieval (hit@k, recall, MRR) and answer
-  quality (token-F1, keyword recall, faithfulness, optional LLM judge). See
-  [EVAL.md](EVAL.md).
-- **Multi-config benchmark** — same dataset, isolated config overrides, side-by-side
-  Markdown report. Use it to defend choices like chunk size and top_k. Run with
-  `make benchmark` (see [`scripts/benchmark.py`](scripts/benchmark.py)).
-- **Public web app (`documind-web`)** — a long-running Starlette/uvicorn server
-  that keeps the LLM warm between requests, exposes `/upload` (multipart PDF),
-  `/chat` (SSE stream), `/api/chat` (single JSON), `/healthz`, and a single-page
-  app at `/`. Per-visitor rate limit, optional `DOCUMIND_API_TOKEN` gate, JSON-line
-  audit log, and a Dockerfile that bundles Ollama for one-command deploys.
-- **Tested** core pipeline, with linting, Docker, and CI included.
-- **Live smoke test** — every PR runs `scripts/smoke_webapp.py` against a
-  freshly-booted uvicorn process (see `.github/workflows/smoke.yml`) so a
-  broken route surfaces before deploy. Catch the "did the import break?"
-  regressions that pure unit tests miss.
+The web app boots in three commands and is the same code path the [Hugging Face Space](DEPLOY.md) runs on. The screenshot below is the real `documind-web` running locally — uploads, SSE-streamed answers, source citations, and a per-visitor rate limit.
 
-## Public web app (recommended)
+![Landing page of DocuMind — choose a PDF or paste a path](docs/landing.png)
+
+![DocuMind answering a multi-chunk question with cited sources and a streaming cursor](docs/chat.png)
+
+> To regenerate the screenshots from a running app, see [`docs/README.md`](docs/README.md). The SVGs in this folder are the source of truth if the app is offline.
+
+---
+
+## 🏗 Architecture
+
+<p align="center">
+  <img src="docs/architecture.png" alt="DocuMind architecture: PDF to streamed cited answer" width="100%">
+</p>
+
+One pipeline, two surfaces. The Streamlit UI and the public web app call the *same* `documind.pipeline` — only the transport differs. PDF → chunks → embeddings → ChromaDB → top-30 candidates → cross-encoder re-rank → top-12 in document order → Ollama chat → streamed answer with page citations.
+
+The re-ranker is the load-bearing piece. A naive RAG drops the model's context window onto whatever the vector store retrieves first; DocuMind pulls 30 candidates, scores each `(query, chunk)` pair jointly with `cross-encoder/ms-marco-MiniLM-L-6-v2`, keeps the best 12, and re-orders them by page so multi-part answers (table of contents, step lists) come out in the document's own order.
+
+| Module | Responsibility |
+|--------|----------------|
+| `config.py` | Typed, env-driven settings (Pydantic). |
+| `ingestion.py` | Load PDFs and split into overlapping, source-tagged chunks. |
+| `vectorstore.py` | Chroma collection: upsert, query, list sources, reset. |
+| `reranker.py` | Cross-encoder re-ranking of retrieved candidates. |
+| `llm.py` | Prompt construction and streaming generation via Ollama. |
+| `pipeline.py` | Orchestrates retrieve → re-rank → generate. |
+| `app.py` | Streamlit chat UI (single-user, local). |
+| `webapp.py` | Starlette/uvicorn long-running public service. |
+
+---
+
+## 📊 Defended defaults, not magic numbers
+
+<p align="center">
+  <img src="docs/showcase.png" alt="Defended defaults: top_k_rerank=12 chosen by a side-by-side benchmark" width="100%">
+</p>
+
+Every retrieval knob in `config.py` was chosen by a side-by-side benchmark on a 9-question eval set spanning 4 indexed PDFs (a resume, an AI-Fluency summary, a cloud-computing textbook, and an EDA report). Same dataset, same metric suite, four-trial grid in [`eval/benchmark.md`](eval/benchmark.md). Re-running the grid with `make benchmark` is the recommended way to defend a different default on a different corpus.
+
+The headline result: bumping `top_k_rerank` from 8 to 12 raised **faithfulness 0.62 → 0.68** and **keyword recall 0.75 → 0.88** on the eval set, at a small token-F1 cost. The wider context window lets the model name the 4D framework components and the Titanic columns verbatim.
+
+---
+
+## 🚀 One-command demo
+
+<p align="center">
+  <img src="docs/terminal.png" alt="From clone to public URL in three commands" width="100%">
+</p>
+
+The terminal above is the literal output of `git clone && pip install && bash start-web.sh`. The same `start-web.sh` works on a fresh Ubuntu VM, on macOS, and inside the HF Space container — one script, one model server, one URL.
+
+---
+
+## ✨ Features
+
+- **Local-first.** Embeddings, retrieval, re-ranking, and generation all run via [Ollama](https://ollama.com) and [ChromaDB](https://www.trychroma.com) on your machine. Nothing leaves your computer.
+- **Citation-grounded answers.** Every response lists the file, page, and cross-encoder relevance score for the chunks it was grounded in. The model is instructed to answer *only* from your documents.
+- **Cross-encoder re-ranking.** Naive vector search is fast but coarse. A cross-encoder scores each `(query, chunk)` pair jointly and gives a much more accurate ordering.
+- **Long-running public web service.** `documind-web` keeps the LLM warm between requests, exposes `/upload` (multipart PDF), `/chat` (SSE stream of tokens + sources), `/api/chat` (single JSON), and `/healthz`. The same pipeline as the Streamlit app.
+- **One-command deploy.** Single Docker image, `docker compose up --build`, or push the existing `deploy/hf-spaces/` image to a Hugging Face Space. See [`DEPLOY.md`](DEPLOY.md) for HF Spaces, Render, Fly.io, and Cloud Run steps.
+- **Hardened for public use.** Per-visitor rate limit, optional `X-Documind-Token` gate, JSON-line audit log, capped streamed answers, path-traversal guard on the admin upload endpoint, and a `prompt-injection resistant` system prompt.
+- **Live CI smoke test.** Every PR runs `scripts/smoke_webapp.py` against a freshly-booted uvicorn process, hitting every public route. Catches the "did the import break?" regressions that pure unit tests miss.
+- **Custom RAG evaluation harness.** Retrieval (hit@k, recall, MRR) and answer quality (token-F1, keyword recall, faithfulness, optional LLM judge). See [`EVAL.md`](EVAL.md).
+
+---
+
+## 🧰 Public web app (recommended)
 
 DocuMind ships a long-running **Starlette + uvicorn** web app (`documind-web`) that keeps the LLM and vector store warm between requests. It's the right surface for HF Spaces, Render, Fly.io, Cloud Run, or your own VPS.
 
@@ -73,13 +111,13 @@ docker compose up --build                      # http://localhost:8000
 # Hugging Face Space — see DEPLOY.md
 ```
 
-Endpoints: `/` (SPA), `/upload` (multipart PDF), `/chat` (SSE stream), `/api/chat` (single JSON), `/healthz`, `/api/sources`. The same `documind.pipeline` powers both surfaces, so the Streamlit app stays available for local use.
+Endpoints: `/` (SPA), `/upload` (multipart PDF), `/chat` (SSE stream), `/api/chat` (single JSON), `/api/upload-by-path` (admin-only, server-side PDF), `/healthz`, `/api/sources`. The same `documind.pipeline` powers both surfaces, so the Streamlit app stays available for local use.
 
 See **[DEPLOY.md](DEPLOY.md)** for HF Spaces, Render, Fly.io, and Cloud Run steps.
 
 ---
 
-## Using DocuMind (local Streamlit UI)
+## 🖥 Using DocuMind (local Streamlit UI)
 
 - **Upload & process** one or more PDFs from the sidebar to index them.
 - **Ask** questions in the chat; answers stream in with an expandable Sources
@@ -90,48 +128,9 @@ See **[DEPLOY.md](DEPLOY.md)** for HF Spaces, Render, Fly.io, and Cloud Run step
 - **History:** every interaction is saved and browsable from the sidebar History
   panel, surviving restarts.
 
-## Screenshots
+---
 
-![Landing](docs/landing.png)
-
-![Chat with sources](docs/chat.png)
-
-These are baked from `docs/landing.svg` and `docs/chat.svg` so the README is
-never broken when the app isn't running. To replace them with screenshots
-of the live app, follow [`docs/README.md`](docs/README.md).
-
-## Architecture
-
-```
-PDF ──▶ ingestion ──▶ chunks ──▶ embeddings (Ollama) ──▶ Chroma vector store
-                                                              │
-question ─────────────────────────────────────────▶ similarity search
-                                                              │
-                                              cross-encoder re-ranking
-                                                              │
-                                          top-k context ──▶ LLM (Ollama) ──▶ streamed answer + citations
-```
-
-| Module | Responsibility |
-|--------|----------------|
-| `config.py` | Typed, env-driven settings (Pydantic). |
-| `ingestion.py` | Load PDFs and split into overlapping, source-tagged chunks. |
-| `vectorstore.py` | Chroma collection: upsert, query, list sources, reset. |
-| `reranker.py` | Cross-encoder re-ranking of retrieved candidates. |
-| `llm.py` | Prompt construction and streaming generation via Ollama. |
-| `pipeline.py` | Orchestrates retrieve → re-rank → generate. |
-| `app.py` | Streamlit chat UI. |
-
-## Prerequisites
-
-1. **Python 3.10+**
-2. **[Ollama](https://ollama.com/download)** running locally, with the models pulled:
-   ```bash
-   ollama pull llama3.2:3b
-   ollama pull nomic-embed-text
-   ```
-
-## Quick start
+## ⚙️ Quick start
 
 ```bash
 git clone https://github.com/Sujay1709/documind-rag.git
@@ -140,15 +139,22 @@ cd documind-rag
 python -m venv .venv && source .venv/bin/activate
 pip install -e .            # or: pip install -r requirements.txt
 
-streamlit run src/documind/app.py
-```
+# Start Ollama in another terminal and pull the two models
+ollama serve &
+ollama pull llama3.2:3b
+ollama pull nomic-embed-text
 
-Open http://localhost:8501, upload one or more PDFs, click **Process documents**,
-then ask questions.
+# Either surface works:
+streamlit run src/documind/app.py          # http://localhost:8501
+# or
+bash start-web.sh                          # http://localhost:8000
+```
 
 Looking for the resume / interview narrative? See [`RESUME.md`](RESUME.md).
 
-## Configuration
+---
+
+## 🔧 Configuration
 
 Copy `.env.example` to `.env` and override any of the settings (all optional):
 
@@ -161,7 +167,7 @@ Copy `.env.example` to `.env` and override any of the settings (all optional):
 | `DOCUMIND_CHUNK_SIZE` | `1000` | Characters per chunk |
 | `DOCUMIND_CHUNK_OVERLAP` | `200` | Overlap between chunks |
 | `DOCUMIND_N_RESULTS` | `30` | Candidates retrieved before re-ranking |
-| `DOCUMIND_TOP_K_RERANK` | `12` | Chunks kept after re-ranking |
+| `DOCUMIND_TOP_K_RERANK` | `12` | Chunks kept after re-ranking (defended default) |
 | `DOCUMIND_PERSIST_DIR` | `./.documind/chroma` | Vector store location |
 | `DOCUMIND_HISTORY_FILE` | `./.documind/history.json` | Persistent Q&A history file |
 | `DOCUMIND_API_TOKEN` | _empty_ | If set, `/upload` and `/chat` require `X-Documind-Token` |
@@ -175,9 +181,9 @@ Copy `.env.example` to `.env` and override any of the settings (all optional):
 ### Upload size
 
 PDFs can be up to **500 MB** per file. This is enforced by Streamlit via
-`maxUploadSize` in [`.streamlit/config.toml`](.streamlit/config.toml). To change
-it, update **both** that value and `DOCUMIND_MAX_UPLOAD_MB` (the latter only sets
-the size shown in the upload section).
+`maxUploadSize` in [`.streamlit/config.toml`](.streamlit/config.toml) and by the
+web app's `_MAX_UPLOAD_BYTES` constant. To change it, update **both** that value
+and `DOCUMIND_MAX_UPLOAD_MB`.
 
 ### Security & privacy
 
@@ -195,7 +201,9 @@ DocuMind is built so your document data can't leak:
 - **No prompt disclosure.** The model is told never to reveal its system prompt or
   configuration.
 
-## Run with Docker
+---
+
+## 🐳 Run with Docker
 
 ```bash
 docker compose up --build
@@ -204,24 +212,33 @@ docker compose exec ollama ollama pull llama3.2:3b
 docker compose exec ollama ollama pull nomic-embed-text
 ```
 
-App: http://localhost:8501
+App: http://localhost:8000 (web app, recommended) or :8501 (Streamlit, override `command:` in `docker-compose.yml`).
 
-## Deploy to the cloud (free)
+---
+
+## ☁️ Deploy to the cloud (free)
 
 DocuMind can run as a public Hugging Face Space (Docker) with Ollama bundled in
 the container — see **[DEPLOY.md](DEPLOY.md)** for step-by-step instructions. The
 Space files live in [`deploy/hf-spaces/`](deploy/hf-spaces/).
 
-## Development
+---
+
+## 🛠 Development
 
 ```bash
 pip install -e ".[dev]"
-make test     # run the test suite
+make test     # run the test suite (47 cases)
 make lint     # ruff
 make fmt      # auto-format + fix
+make smoke    # live HTTP smoke test (boots uvicorn, hits /healthz etc.)
+make eval     # run a single-config RAG eval
+make benchmark  # multi-config grid → eval/benchmark.md
 ```
 
-## What's new
+---
+
+## 🆕 What's new
 
 Compared with the original single-file prototype, DocuMind:
 
@@ -232,9 +249,13 @@ Compared with the original single-file prototype, DocuMind:
 - **Adds real citations.** Answers are grounded in displayed source/page/score.
 - **Supports multiple documents** and a chat history for follow-ups.
 - **Splits a 140-line script into a tested, typed package** with config,
-  Docker, and CI.
+  Docker, CI, and a public web service.
 - **Externalises configuration** instead of hard-coding URLs and model names.
+- **Defends every default with a benchmark.** Run `make benchmark` to re-derive
+  `top_k_rerank=12` and `chunk_size=1000` for your own corpus.
 
-## License
+---
+
+## 📄 License
 
 MIT — see [LICENSE](LICENSE).
