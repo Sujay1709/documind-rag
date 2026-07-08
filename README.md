@@ -97,9 +97,15 @@ The terminal above is the literal output of `git clone && pip install && bash st
 
 ---
 
-## 🧰 Public web app (recommended)
+## 🧰 Two surfaces, one pipeline
 
-DocuMind ships a long-running **Starlette + uvicorn** web app (`documind-web`) that keeps the LLM and vector store warm between requests. It's the right surface for HF Spaces, Render, Fly.io, Cloud Run, or your own VPS.
+The same RAG pipeline — PDF → chunks → embed → vector search → cross-encoder re-rank → LLM — runs in two modes:
+
+1. **Browser-only (recommended for public demos)** — Static HF Space. PDF parsing, embeddings, vector search, and re-ranking all run in WebAssembly in the visitor's browser. The only network call is the LLM completion (Groq by default). The bundle is 60 KB; the page loads in <1s. **Truly free, no paid tier, no cold start.**
+2. **Server (local Ollama + ChromaDB)** — Starlette/uvicorn web app. The same pipeline, but everything runs in a Python process on a single machine. Best for a private deployment or a fully-local RAG system on a workstation.
+
+For a Handshake / portfolio link, ship the static surface. For a private deployment, use the server surface.
+
 
 ```bash
 # Local

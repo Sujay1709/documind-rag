@@ -21,6 +21,10 @@ test:
 smoke:
 	python scripts/smoke_webapp.py
 
+# Static-space chunker smoke test (Node only, no browser needed).
+static-test:
+	node tests/test_static_chunker.js
+
 # Single-config RAG evaluation (writes eval/report.json).
 eval:
 	documind-eval --dataset eval/datasets/realistic.json --out eval/report.json

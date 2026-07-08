@@ -81,7 +81,92 @@ is set.
 
 ---
 
-## Hugging Face Spaces (free, Docker)
+## Hugging Face Spaces (free, Static — recommended)
+
+A Static Space serves only the HTML/JS/CSS bundle; no container, no
+model server, no cold start. The whole RAG pipeline runs in the
+visitor's browser via WebAssembly:
+
+```
+Browser                    HF CDN
+  │                          │
+  ├── index.html (3.8 KB)    │  ← static
+  ├── styles.css (9.1 KB)    │  ← static
+  ├── js/pdf.js (PDF.js)     │  ← static
+  ├── js/chunker.js          │  ← static
+  ├── js/rag-pipeline.js     │  ← static
+  │   └─ Xenova/all-MiniLM-L6-v2 (WASM embedder, ~25 MB)
+  │   └─ Xenova/cross-encoder-ms-marco (WASM reranker, ~25 MB)
+  ├── js/store.js (IndexedDB) │  ← static
+  ├── js/llm.js              │  ← static
+  └── js/app.js              │  ← static
+         │
+         └── only outbound call: → Groq (or any OpenAI-compatible)
+                                  chat/completions endpoint
+                                  streaming, SSE
+```
+
+The total bundle is 60 KB. Models are pulled from Hugging Face's CDN
+on first use and cached by the browser. Documents and embeddings live
+in IndexedDB on the visitor's machine.
+
+### Steps
+
+1. **Create the Space**
+   - Go to https://huggingface.co/new-space
+   - Owner: your account · Space name: `documind` · License: MIT
+   - **SDK: Static** → *Blank* template · Hardware: *Static (free)* → **Create Space**
+
+2. **Push the bundle.** A Static Space is a git repo with `index.html` at
+   the root. The cleanest path is to push the contents of `deploy/hf-spaces-static/`:
+
+   ```bash
+   # clone your new (empty) Space
+   git clone https://huggingface.co/spaces/<your-hf-username>/documind
+   cd documind
+
+   # copy the SPA from this repo
+   cp -r ../rag-app/deploy/hf-spaces-static/* .
+
+   git add -A
+   git commit -m "Deploy DocuMind static SPA"
+   git push
+   ```
+
+3. **Open the Space.** The static page loads in seconds. The first
+   PDF you upload triggers a one-time 50 MB model load (the
+   embedder + re-ranker), then everything runs locally.
+
+4. **Get a free LLM key.** The visitor (or you) pastes a Groq API
+   key in the Admin sign-in panel. Free tier, no credit card, sign
+   up at https://console.groq.com. The key lives in the browser's
+   localStorage; it's never sent anywhere except the configured
+   LLM endpoint.
+
+### Why static, not Docker?
+
+- **Truly free.** Static Spaces are free with no paid tier; Docker
+  Spaces on free CPU hardware are slow (cold-start model pulls, no
+  GPU, ~10s per first token).
+- **Zero cold start.** No container to spin up. The bundle is on
+  HF's CDN, the page loads in <1s.
+- **No data leaves the browser** except the LLM prompt. Documents
+  and embeddings are in IndexedDB; even the cited-context sent to
+  the LLM is only the 12 chunks the model actually needs.
+- **Caveat:** the LLM call still hits Groq's servers, so this is
+  not strictly "local." It's "local for the data, cloud for the
+  inference" — the right tradeoff for a public Handshake demo.
+
+### Self-host (any static host)
+
+The bundle is plain static files. Drop the `deploy/hf-spaces-static/`
+contents into Netlify, Vercel, GitHub Pages, S3+CloudFront, or a
+USB stick. Same code, same behavior. CORS is not an issue because
+the Groq call is browser-direct.
+
+---
+
+## Hugging Face Spaces (Docker — the original, kept for reference)
 
 This deploys the whole app — web UI **and** a bundled Ollama server — into a
 single Docker Space, so it's reachable from a public URL anywhere.
