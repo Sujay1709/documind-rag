@@ -70,7 +70,11 @@ export async function embedChunks(chunks) {
       slice.map((c) => extractor(c.text, { pooling: "mean", normalize: true }))
     );
     for (let j = 0; j < results.length; j++) {
-      out[i + j] = Array.from(results[j].data);
+      // .tolist() returns a [dim]-shaped nested array. Fall back to
+      // Array.from(.data) if the backend doesn't expose .tolist().
+      out[i + j] = typeof results[j].tolist === "function"
+        ? results[j].tolist()
+        : Array.from(results[j].data);
     }
   }
   return out;
@@ -79,7 +83,9 @@ export async function embedChunks(chunks) {
 export async function embedQuery(q) {
   const extractor = await getEmbedder();
   const r = await extractor(q, { pooling: "mean", normalize: true });
-  return Array.from(r.data);
+  // Use .tolist() for the same reason as in embedChunks: a [dim]-shaped
+  // nested array, regardless of backend.
+  return typeof r.tolist === "function" ? r.tolist() : Array.from(r.data);
 }
 
 // Vector search: return the top-N chunks by cosine similarity to the
@@ -114,14 +120,20 @@ export async function rerank(query, candidates, chunks, topK = 12) {
   // embeddings with the same normalization the embedder uses.
   const inputs = [query, ...texts];
   const out = await r(inputs, { pooling: "mean", normalize: true });
-  // `out` is a single tensor with shape [N+1, dim]. The first row is
-  // the query; the rest are the candidate texts.
-  const qVec = Array.from(out.data.slice(0, out.dims[1]));
-  const textVecs = [];
-  for (let i = 1; i < out.dims[0]; i++) {
-    const start = i * out.dims[1];
-    textVecs.push(Array.from(out.data.slice(start, start + out.dims[1])));
+  // The pipeline returns a Tensor-like object. .tolist() gives a proper
+  // nested array of shape [N+1, dim]; .data is a flat Float32Array.
+  // We use .tolist() because it doesn't require knowing the dim up front.
+  const rows = typeof out.tolist === "function" ? out.tolist() : Array.from(out.data);
+  if (!Array.isArray(rows) || rows.length < 1) {
+    // Defensive fallback: if the pipeline returns a single flat vector
+    // for the whole input, treat it as a single embedding of the whole
+    // batch. This shouldn't happen with our inputs but keeps the function
+    // safe if the model returns something unexpected.
+    return candidates.slice(0, topK).map((c, i) => ({ i: c.i, score: 0 }));
   }
+  // rows[0] is the query; rows[1..] are the candidate texts.
+  const qVec = rows[0];
+  const textVecs = rows.slice(1);
   // Score by dot product (vectors are already normalized, so this is
   // cosine similarity).
   const scored = textVecs.map((v, i) => ({
