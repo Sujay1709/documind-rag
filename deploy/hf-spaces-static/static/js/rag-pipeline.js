@@ -15,7 +15,7 @@ import {
 } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0";
 
 const EMBED_MODEL = "Xenova/all-MiniLM-L6-v2";
-const RERANK_MODEL = "Xenova/cross-encoder-ms-marco-MiniLM-L-6-v2";
+const RERANK_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2";  // non-gated Xenova mirror
 
 let embedPipeline = null;
 let rerankPipeline = null;
