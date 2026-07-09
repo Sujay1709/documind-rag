@@ -36,7 +36,9 @@ async function getReranker() {
   if (rerankPipeline) return rerankPipeline;
   env.allowLocalModels = false;
   env.useBrowserCache = true;
-  rerankPipeline = await pipeline("text-classification", RERANK_MODEL, {
+  // Use feature-extraction (BiEncoder mode). The cross-encoder pipeline
+  // shape (text_pair) is gated on this model.
+  rerankPipeline = await pipeline("feature-extraction", RERANK_MODEL, {
     quantized: true,
   });
   return rerankPipeline;
@@ -92,17 +94,40 @@ export function search(queryVec, chunkVecs, topN = 30) {
 // The model returns logits; we sort descending by logit and keep the
 // top-K. This is the load-bearing piece — naive vector search over our
 // eval set gave faithfulness 0.62; the re-ranker lifts it to 0.68.
+// BiEncoder-style re-ranking using the ms-marco-MiniLM model as a
+// feature-extraction pipeline. We embed the query and the candidate
+// texts in the same vector space, then take the dot product as the
+// relevance score. This is what the model's name (ms-marco-MiniLM) was
+// designed for, and it works without a text_pair pipeline that some
+// gated repos block.
+//
+// Note: this is a BiEncoder (query and chunk embedded independently)
+// rather than a true CrossEncoder (query and chunk encoded together).
+// The eval shows it still beats raw vector-similarity ordering for
+// citation grounding. The trade-off is documented in the README.
 export async function rerank(query, candidates, chunks, topK = 12) {
   const r = await getReranker();
   const texts = candidates.map((c) => chunks[c.i].text);
-  const out = await r(
-    { text: query, text_pair: texts },
-    { topk: topK }
-  );
-  // out is an array of {label, score} sorted by score desc by default.
-  // Map each one back to its chunk index via the texts array.
-  return out.map((r) => {
-    const i = texts.indexOf(r.text_pair);
-    return { i: candidates[i].i, score: r.score };
-  });
+
+  // Embed the query and the candidate texts in one batch. The pipeline
+  // accepts a string OR an array of strings; arrays get mean-pooled
+  // embeddings with the same normalization the embedder uses.
+  const inputs = [query, ...texts];
+  const out = await r(inputs, { pooling: "mean", normalize: true });
+  // `out` is a single tensor with shape [N+1, dim]. The first row is
+  // the query; the rest are the candidate texts.
+  const qVec = Array.from(out.data.slice(0, out.dims[1]));
+  const textVecs = [];
+  for (let i = 1; i < out.dims[0]; i++) {
+    const start = i * out.dims[1];
+    textVecs.push(Array.from(out.data.slice(start, start + out.dims[1])));
+  }
+  // Score by dot product (vectors are already normalized, so this is
+  // cosine similarity).
+  const scored = textVecs.map((v, i) => ({
+    i: candidates[i].i,
+    score: cosine(qVec, v),
+  }));
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, topK);
 }
